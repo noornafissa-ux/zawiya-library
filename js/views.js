@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=686febed3b';
-import * as data from './data.js?v=686febed3b';
-import * as store from './store.js?v=686febed3b';
-import { search, queryWords } from './search.js?v=686febed3b';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=41b7ca4fce';
+import * as data from './data.js?v=41b7ca4fce';
+import * as store from './store.js?v=41b7ca4fce';
+import { search, queryWords } from './search.js?v=41b7ca4fce';
 
 const href = {
   library: () => '/',
@@ -443,6 +443,7 @@ function pagesBookView(meta) {
     h('h2', { class: 'h-display', style: 'font-size:1.6rem' }, 'الفهرس'),
     h('div', { class: 'toc-sec open-sec' }, h('ul', { class: 'toc-list' }, meta.toc.map((t) =>
       h('li', null, h('a', { href: href.page(meta.id, t.page) }, h('span', { class: 'n' }, t.page), h('span', null, h('span', { class: 't' }, t.title)))))))) : null;
+  if (!meta.pdf && meta.pages.length) setTimeout(() => { const last = store.lastRead(); const k = last && last.b === meta.id && last.kind === 'page' ? last.n : 1; const im = new Image(); im.src = meta.pages[k - 1]; }, 300);
   return page('', backLink('/'), hero, toc, offlinePanel(meta));
 }
 // ——— كتب PDF: تُرسم الصفحة في المتصفح (ملف واحد بدل مئات الصور) ———
@@ -490,7 +491,7 @@ export async function pageView(bookId, nStr) {
     h('div', { class: 'crumb' }, h('a', { href: href.book(bookId) }, meta.shortTitle), sec ? ` › ${sec.title}` : ''),
     h('span', { class: 'page-no' }, `صفحة ${n} من ${N}`));
   const img = meta.pdf ? h('canvas', { class: 'page-img', role: 'img', 'aria-label': `${meta.title} — صفحة ${n}` })
-    : h('img', { class: 'page-img', src: meta.pages[n - 1], alt: `${meta.title} — صفحة ${n}`, width: '1182', height: '1674', decoding: 'async' });
+    : h('img', { class: 'page-img', src: meta.pages[n - 1], alt: `${meta.title} — صفحة ${n}`, width: String((meta.pageSize || [1182])[0]), height: String((meta.pageSize || [0, 1674])[1]), decoding: 'async', fetchpriority: 'high' });
   const sheet = h('figure', { class: 'page-sheet' }, img);
   const loading = meta.pdf ? h('div', { class: 'pdf-loading' }, 'جارٍ تحميل الصفحة…') : null;
   if (meta.pdf) sheet.append(loading);
@@ -505,7 +506,7 @@ export async function pageView(bookId, nStr) {
     n > 1 ? h('a', { class: 'prev', href: href.page(bookId, n - 1), rel: 'prev' }, h('small', null, '→ السابقة'), h('span', { class: 't' }, `صفحة ${n - 1}`)) : h('span', { class: 'ph' }),
     n < N ? h('a', { class: 'next', href: href.page(bookId, n + 1), rel: 'next' }, h('small', null, 'التالية ←'), h('span', { class: 't' }, `صفحة ${n + 1}`)) : h('span', { class: 'ph' }));
   // تحميل الصفحة التالية مسبقًا
-  if (!meta.pdf && n < N) { const pre = new Image(); pre.src = meta.pages[n]; }
+  if (!meta.pdf) for (const k of [n, n + 1, n - 2]) if (k >= 0 && k < N && k !== n - 1) { const pre = new Image(); pre.src = meta.pages[k]; }
   const view = h('div', { class: 'reader pages-reader' }, tools, h('div', { class: 'page' }, sheet, pager));
   if (meta.pdf) view._after = () => renderPdfPage(meta.pdf, n, img, sheet).then(() => loading.remove()).catch((e) => { console.error(e); loading.textContent = navigator.onLine ? 'تعذّر عرض الصفحة.' : 'أنت غير متصل بالإنترنت، وهذا الكتاب لم يُحفظ على الجهاز بعد.'; });
   view._keys = (e) => { if (e.key === 'ArrowLeft') go(n + 1); if (e.key === 'ArrowRight') go(n - 1); };
