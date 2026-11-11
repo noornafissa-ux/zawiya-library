@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مكتبة الزاوية التمسّكية</title>
+<meta name="description" content="مكتبة رقمية لدواوين القصائد الصوفية: قراءة، بحث، ومفضلة، وتعمل دون اتصال.">
+<meta name="theme-color" content="#0e4d3d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="مكتبة الزاوية">
+<link rel="preload" href="fonts/Amiri-Regular.woff" as="font" type="font/woff" crossorigin>
+<link rel="preload" href="fonts/NotoNaskhArabic.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="app.css?v=140585e642">
+<link rel="modulepreload" href="js/main.js?v=140585e642">
+<link rel="modulepreload" href="js/views.js?v=140585e642">
+<link rel="modulepreload" href="js/util.js?v=140585e642">
+<link rel="modulepreload" href="js/data.js?v=140585e642">
+<link rel="modulepreload" href="js/store.js?v=140585e642">
+<link rel="modulepreload" href="js/search.js?v=140585e642">
+<link rel="preload" href="data/library.json?v=140585e642" as="fetch" crossorigin>
+<script>window.__V = '140585e642';</script>
+<script>
+  // تطبيق وضع القراءة قبل الرسم لتجنّب الوميض
+  try { var s = JSON.parse(localStorage.getItem('dl.settings.v1') || '{}');
+    if (s.mode) document.documentElement.dataset.mode = s.mode;
+    if (s.size) document.documentElement.style.setProperty('--verse-scale', s.size);
+  } catch (e) {}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">تخطَّ إلى المحتوى</a>
+<header class="topbar" id="topbar">
+  <button class="icon-btn" id="menu-btn" aria-label="القائمة" aria-expanded="false" aria-controls="drawer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="brand" href="/" aria-label="مكتبة الزاوية التمسّكية — الرئيسية">
+    <img class="mark" src="icons/zawiya-logo.webp?v=140585e642" alt="" width="512" height="512" decoding="async">
+    <span class="wordmark"><span class="wm-top">مكتبة</span><span class="wm-main">الزاوية التمسّكية</span></span>
+  </a>
+  <nav class="topnav" aria-label="التنقل الرئيسي">
+    <a href="/" data-nav="library">المكتبة</a>
+    <a href="/search" data-nav="search">البحث</a>
+    <a href="/favorites" data-nav="favorites">المفضلة</a>
+    <a href="/continue" data-nav="continue">متابعة القراءة</a>
+  </nav>
+  <a class="icon-btn" href="/search" aria-label="البحث" id="search-shortcut">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+  </a>
+</header>
+
+<div class="drawer-scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" aria-label="القائمة" hidden>
+  <div class="drawer-head">
+    <strong class="dh"><img class="logo" src="icons/zawiya-logo.webp?v=140585e642" alt="" width="512" height="512" decoding="async"><span class="wordmark"><span class="wm-top">مكتبة</span><span class="wm-main">الزاوية التمسّكية</span></span></strong>
+    <button class="icon-btn" id="drawer-close" aria-label="إغلاق القائمة"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <nav class="drawer-nav" aria-label="القائمة">
+    <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.6 1 -4 15-3.6-1z"/></svg><span>المكتبة</span></a>
+    <a href="/search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><span>البحث</span></a>
+    <a href="/favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>المفضلة</span></a>
+    <a href="/continue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6.5c3-2 6.5-2 9-1V19c-2.5-1-6-1-9 1-3-2-6.5-2-9-1z"/><path d="M12 6.5V20"/></svg><span>متابعة القراءة</span></a>
+  </nav>
+  <div class="drawer-sec" id="drawer-books"><h3>الدواوين</h3></div>
+  <div class="drawer-sec">
+    <h3>إعدادات القراءة</h3>
+    <div class="setting">
+      <span id="size-label">حجم الخط</span>
+      <div class="seg" role="group" aria-labelledby="size-label">
+        <button type="button" data-size="-1" aria-label="تصغير الخط">أ−</button>
+        <output id="size-out">100%</output>
+        <button type="button" data-size="1" aria-label="تكبير الخط">أ+</button>
+      </div>
+    </div>
+    <div class="setting">
+      <span id="mode-label">وضع القراءة</span>
+      <div class="seg modes" role="radiogroup" aria-labelledby="mode-label">
+        <button type="button" role="radio" data-mode="auto">تلقائي</button>
+        <button type="button" role="radio" data-mode="ivory">عاجي</button>
+        <button type="button" role="radio" data-mode="light">أبيض</button>
+        <button type="button" role="radio" data-mode="night">ليلي</button>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-sec" id="install-sec" hidden>
+    <button class="btn ghost wide" id="install-btn" type="button">إضافة التطبيق إلى الشاشة الرئيسية</button>
+  </div>
+  <p class="drawer-foot" id="app-version"></p>
+</aside>
+
+<main id="main" tabindex="-1"></main>
+
+<nav class="bottomnav" aria-label="التنقل الرئيسي">
+  <a href="/" data-nav="library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.6 1 -4 15-3.6-1z"/></svg><span>المكتبة</span></a>
+  <a href="/search" data-nav="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><span>البحث</span></a>
+  <a href="/favorites" data-nav="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>المفضلة</span></a>
+  <a href="/continue" data-nav="continue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5C5.5 4.5 9 4.5 12 6.5c3-2 6.5-2 9-1V19c-2.5-1-6-1-9 1-3-2-6.5-2-9-1z"/><path d="M12 6.5V20"/></svg><span>متابعة</span></a>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script type="module" src="js/main.js?v=140585e642"></script>
+</body>
+</html>

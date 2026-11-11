@@ -1,0 +1,17 @@
+{
+  "name": "مكتبة الزاوية التمسّكية",
+  "short_name": "مكتبة الزاوية",
+  "description": "مكتبة الزاوية التمسّكية: دواوين القصائد الصوفية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f0e1",
+  "theme_color": "#0e4d3d",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

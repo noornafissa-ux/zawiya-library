@@ -1,0 +1,18 @@
+# روابط التسجيلات — اكتب كل تسجيل في سطر: اسم القصيدة من الدليل، ثم مسافة، ثم الرابط، ثم (اختياريًا) اسم المنشد
+# الرابط المباشر لملف mp3 (مثل archive.org/download/...) يُشغَّل داخل الصفحة، ورابط يوتيوب يظهر زرًّا يفتحه
+# التسجيلات المرفوعة على: https://archive.org/details/zawiya-recordings
+muhammadiya-13 https://archive.org/download/zawiya-recordings/muhammadiya-13.mp3
+muhammadiya-15 https://archive.org/download/zawiya-recordings/muhammadiya-15.mp3
+irshadiya-9 https://archive.org/download/zawiya-recordings/irshadiya-9.mp3
+khamriya-2 https://archive.org/download/zawiya-recordings/khamriya-2.mp3
+khamriya-8 https://archive.org/download/zawiya-recordings/khamriya-7.mp3
+khamriya-16 https://archive.org/download/zawiya-recordings/khamriya-15.mp3
+khamriya-20 https://archive.org/download/zawiya-recordings/khamriya-19.mp3
+khamriya-31 https://archive.org/download/zawiya-recordings/%D8%A3khamriya-30.mp3
+unsectioned-1 https://archive.org/download/zawiya-recordings/unsectioned-1.mp3
+irshadiya-19 https://archive.org/download/zawiya-recordings/irshadiya-19.mp3
+khamriya-3 https://archive.org/download/zawiya-recordings/khamriya-3.mp3
+khamriya-67 https://archive.org/download/zawiya-recordings/khamriya-67.mp3
+muhammadiya-12 https://archive.org/download/zawiya-recordings/muhammadiya-12.mp3
+muhammadiya-2 https://archive.org/download/zawiya-recordings/muhammadiya-2.mp3
+irshadiya-18 https://archive.org/download/zawiya-recordings/irshadiya-18.mp3
