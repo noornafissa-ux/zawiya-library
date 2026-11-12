@@ -1,8 +1,8 @@
 // نقطة البدء: التوجيه، القائمة، الإعدادات، عامل الخدمة
-import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=41b7ca4fce';
-import * as store from './store.js?v=41b7ca4fce';
-import * as data from './data.js?v=41b7ca4fce';
-import * as V from './views.js?v=41b7ca4fce';
+import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=ba2d526bf2';
+import * as store from './store.js?v=ba2d526bf2';
+import * as data from './data.js?v=ba2d526bf2';
+import * as V from './views.js?v=ba2d526bf2';
 
 const main = document.getElementById('main');
 let current = null;
@@ -150,4 +150,17 @@ if (!HASH_MODE) addEventListener('hashchange', () => {
   if (location.hash.startsWith('#/')) { history.replaceState(null, '', location.hash.slice(1) || '/'); route(); }
 });
 addEventListener('app:navigate', route);
+// إن نُشر إصدار أحدث والصفحة مفتوحة منذ مدة (أو التطبيق مثبّت على الهاتف): يُعاد التحميل تلقائيًا ليظهر الجديد
+let lastCheck = 0;
+async function checkVersion() {
+  if (!window.__V || Date.now() - lastCheck < 60000) return; lastCheck = Date.now();
+  try {
+    const r = await fetch(`version.txt?t=${Date.now()}`, { cache: 'no-store' });
+    const v = r.ok ? (await r.text()).trim() : '';
+    if (v && /^[a-f0-9]{6,}$/.test(v) && v !== window.__V) location.reload();
+  } catch {}
+}
+addEventListener('app:navigate', checkVersion);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkVersion(); });
+setTimeout(checkVersion, 3000);
 route();
