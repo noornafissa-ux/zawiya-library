@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=811415e55d';
-import * as data from './data.js?v=811415e55d';
-import * as store from './store.js?v=811415e55d';
-import { search, queryWords } from './search.js?v=811415e55d';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=b39297d013';
+import * as data from './data.js?v=b39297d013';
+import * as store from './store.js?v=b39297d013';
+import { search, queryWords } from './search.js?v=b39297d013';
 
 const href = {
   library: () => '/',
@@ -129,7 +129,7 @@ export async function libraryView() {
     h('div', { class: 'hero-in' },
       siteLogo(),
       h('p', { class: 'hero-tag' }, 'دواوين ومدائح وأوراد للقراءة والسماع'),
-      h('a', { class: 'hero-search', href: '/search' }, svg(ICONS.search), h('span', null, 'ابحث عن قصيدة أو بيت…'))));
+      h('a', { class: 'hero-search', href: '/search' }, svg(ICONS.search), h('span', null, 'ابحث في قصائد ديوان النفحات الشاذلية…'))));
   const blocks = shelves.map((sh) => h('section', { class: 'shelf', id: `shelf-${sh.id}`, 'aria-label': sh.title },
     sh.compact ? null : h('header', { class: 'shelf-head' },
       h('span', { class: 'sh-line', 'aria-hidden': 'true' }),
@@ -1121,7 +1121,7 @@ export async function searchView(params) {
   document.title = 'البحث — مكتبة الزاوية التمسّكية';
   const q0 = params.get('q') || '';
   let scope = params.get('in') || 'all';
-  const input = h('input', { type: 'search', id: 'q', name: 'q', value: q0, placeholder: 'ابحث عن كلمة أو عبارة… مثل: المحبة', autocomplete: 'off', enterkeyhint: 'search', 'aria-label': 'كلمات البحث' });
+  const input = h('input', { type: 'search', id: 'q', name: 'q', value: q0, placeholder: 'ابحث في الديوان… مثل: المحبة', autocomplete: 'off', enterkeyhint: 'search', 'aria-label': 'كلمات البحث' });
   const out = h('div', { class: 'results', 'aria-live': 'polite' });
   lib = { ...lib, books: lib.books.filter((b) => !b.type) };   // كتب الصفحات المصوّرة لا نص فيها للبحث
   const chips = lib.books.length > 1 ? h('div', { class: 'chips', role: 'group', 'aria-label': 'نطاق البحث' },
@@ -1136,7 +1136,7 @@ export async function searchView(params) {
     const q = input.value.trim();
     const my = ++token;
     setUrlQuietly(href.search(q));
-    if (!q) { out.replaceChildren(h('div', { class: 'empty' }, h('div', { class: 'big' }, 'ابحث في نصوص القصائد وعناوينها'), h('div', null, 'يتجاهل البحث التشكيل والمدّ، فكلمة «المحبة» تطابق «المحبّة» و«المحبه».'))); return; }
+    if (!q) { out.replaceChildren(h('div', { class: 'empty' }, h('div', { class: 'big' }, 'البحث في ديوان النفحات الشاذلية'), h('div', null, 'يشمل نصوص قصائد الديوان وعناوينها فقط، ولا يشمل الكتب الأخرى.'), h('div', null, 'يتجاهل البحث التشكيل والمدّ، فكلمة «المحبة» تطابق «المحبّة» و«المحبه».'))); return; }
     out.replaceChildren(h('div', { class: 'loading' }, 'جارٍ البحث…'));
     let res;
     try { res = await search(q, books()); } catch { if (my === token) out.replaceChildren(h('div', { class: 'empty' }, 'تعذّر تحميل فهرس البحث. تحقق من الاتصال.')); return; }
