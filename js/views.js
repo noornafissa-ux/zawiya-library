@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=b1e76a84a1';
-import * as data from './data.js?v=b1e76a84a1';
-import * as store from './store.js?v=b1e76a84a1';
-import { search, queryWords } from './search.js?v=b1e76a84a1';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=d5ffb83b6e';
+import * as data from './data.js?v=d5ffb83b6e';
+import * as store from './store.js?v=d5ffb83b6e';
+import { search, queryWords } from './search.js?v=d5ffb83b6e';
 
 const href = {
   library: () => '/',
@@ -456,8 +456,11 @@ function pagesBookView(meta) {
   document.title = meta.shortTitle;
   const last = store.lastRead();
   const resume = last && last.b === meta.id && last.kind === 'page' ? last : null;
+  // تجهيز أولى الصفحات مسبقًا ليظهر الكتاب فور الضغط على «ابدأ» أو «متابعة»
+  const warm = (k) => { if (k >= 1 && k <= meta.pages.length) { new Image().src = (meta.thumbs || meta.pages)[k - 1]; } };
+  setTimeout(() => { for (const k of [1, 2, 3]) warm(k); if (resume) for (const k of [resume.n, resume.n + 1]) warm(k); }, 50);
   const hero = h('section', { class: 'book-hero' },
-    meta.cover ? h('div', { class: 'cover' }, h('img', { src: meta.cover, alt: `غلاف ${meta.title}`, width: '1182', height: '1674' })) : null,
+    (meta.coverThumb || meta.cover) ? h('div', { class: 'cover' }, h('img', { src: meta.coverThumb || meta.cover, alt: `غلاف ${meta.title}`, width: '420', height: '600' })) : null,
     h('div', { style: 'display:grid;gap:12px' },
       h('h1', { class: 'h-display' }, emblem(), meta.title),
       meta.compiler ? h('p', { class: 'summary' }, `${meta.compilerLabel ? meta.compilerLabel + ': ' : ''}${meta.compiler}`) : null,
