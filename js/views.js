@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=d4426b6f79';
-import * as data from './data.js?v=d4426b6f79';
-import * as store from './store.js?v=d4426b6f79';
-import { search, queryWords } from './search.js?v=d4426b6f79';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=95528ad19c';
+import * as data from './data.js?v=95528ad19c';
+import * as store from './store.js?v=95528ad19c';
+import { search, queryWords } from './search.js?v=95528ad19c';
 
 const href = {
   library: () => '/',
@@ -1023,6 +1023,10 @@ function recordingsPanel(recs, title, author, bookTitle) {
       const audio = h('audio', { preload: 'metadata', src: r.src });
       // إن تعذّر التشغيل داخل الصفحة (الرابط أو الصيغة): نعرض رابطًا يفتح التسجيل مباشرة
       audio.addEventListener('error', () => {
+        // نسخة mp3 لم تُجهَّز بعد على الأرشيف (رُفع الأصل بصيغة wav): نجرّب الأصل نفسه
+        if (/archive\.org\/download\/.+\.mp3$/i.test(audio.src) && !audio.dataset.triedWav) {
+          audio.dataset.triedWav = '1'; audio.src = audio.src.replace(/\.mp3$/i, '.wav'); audio.load(); return;
+        }
         const host = audio.closest('.slim-player') || audio;
         if (host.nextElementSibling?.classList.contains('rec-fallback')) return;
         host.after(h('p', { class: 'rec-fallback' }, 'تعذّر تشغيل التسجيل هنا. ',
