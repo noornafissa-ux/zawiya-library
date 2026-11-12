@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=bb555d5677';
-import * as data from './data.js?v=bb555d5677';
-import * as store from './store.js?v=bb555d5677';
-import { search, queryWords } from './search.js?v=bb555d5677';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=7c0629825e';
+import * as data from './data.js?v=7c0629825e';
+import * as store from './store.js?v=7c0629825e';
+import { search, queryWords } from './search.js?v=7c0629825e';
 
 const href = {
   library: () => '/',
@@ -602,6 +602,11 @@ export async function pageView(bookId, nStr) {
     const pre = new Image(); pre.decoding = 'async'; pre.src = full;
     (pre.decode ? pre.decode() : Promise.resolve()).then(() => { img.src = full; }, () => { img.src = full; });
   };
+  // كل صفحة تقترب من الشاشة تُستبدل نسختها الخفيفة بالجودة الكاملة، ولو مرّت سريعًا
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { upgrade(+e.target.dataset.n); io.unobserve(e.target); } }), { rootMargin: '120% 0px' });
+    sheets.forEach((f) => io.observe(f));
+  }
   let cur = 0;
   const setCur = (k) => {
     if (k === cur) return; cur = k;
