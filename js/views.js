@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=04d4b01c32';
-import * as data from './data.js?v=04d4b01c32';
-import * as store from './store.js?v=04d4b01c32';
-import { search, queryWords } from './search.js?v=04d4b01c32';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=a838dc623e';
+import * as data from './data.js?v=a838dc623e';
+import * as store from './store.js?v=a838dc623e';
+import { search, queryWords } from './search.js?v=a838dc623e';
 
 const href = {
   library: () => '/',
@@ -349,7 +349,7 @@ function proseView(meta) {
     h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'تصغير الخط', onclick: () => sizeToast(store.stepSize(-1)) }, svg(ICONS.textSmall)),
     h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'تكبير الخط', onclick: () => sizeToast(store.stepSize(1)) }, svg(ICONS.textSize)));
   const frame = h('article', { class: 'q-frame pr-frame' }, head,
-    h('details', { class: 'q-toc-wrap' }, h('summary', null, 'الانتقال إلى حرف'), toc), body,
+    body,
     h('div', { class: 'q-end' }, 'تَمَّ بِحَمْدِ اللهِ'));
   const view = h('div', { class: 'reader q-reader' }, tools, h('div', { class: 'page' }, frame));
   view._layout = () => justifyKashida(body);
@@ -412,7 +412,7 @@ function qasidaView(meta) {
   const refrain = meta.refrain ? h('section', { class: 'q-refrain', 'aria-label': 'اللازمة' },
     meta.refrain.verses.map((v) => h('div', { class: 'rf-v' }, v.map((t) => h('span', { class: 'rf-s' }, t)))),
     meta.refrain.note ? (() => { const ws = meta.refrain.note.split(' '); const first = ws.shift(); const last = ws.pop(); return h('p', { class: 'rf-note' }, h('span', { class: 'nw' }, h('span', { class: 'rf-par', 'aria-hidden': 'true' }, '❪'), first), ` ${ws.join(' ')} `, h('span', { class: 'nw' }, last, h('span', { class: 'rf-par', 'aria-hidden': 'true' }, '❫'))); })() : null) : null;
-  const frame = h('article', { class: 'q-frame' }, head, refrain, h('details', { class: 'q-toc-wrap', open: true }, h('summary', null, 'فصول القصيدة'), toc), body,
+  const frame = h('article', { class: 'q-frame' }, head, refrain, body,
     meta.chapterNote ? h('p', { class: 'q-foot' }, meta.chapterNote) : null,
     h('div', { class: 'q-end' }, 'تَمَّ بِحَمْدِ اللهِ'));
   const view = h('div', { class: 'reader q-reader' }, tools, h('div', { class: 'page' }, frame));
