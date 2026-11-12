@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=51cd8b3975';
-import * as data from './data.js?v=51cd8b3975';
-import * as store from './store.js?v=51cd8b3975';
-import { search, queryWords } from './search.js?v=51cd8b3975';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=ddc2545dbf';
+import * as data from './data.js?v=ddc2545dbf';
+import * as store from './store.js?v=ddc2545dbf';
+import { search, queryWords } from './search.js?v=ddc2545dbf';
 
 const href = {
   library: () => '/',
@@ -537,38 +537,47 @@ export async function pageView(bookId, nStr) {
   if (meta.type !== 'pages') return notFound('هذا الكتاب لا يُعرض صفحاتٍ.');
   const N = meta.pageCount || meta.pages.length;
   const n = Math.min(N, Math.max(1, parseInt(nStr, 10) || 1));
-  document.title = `${meta.shortTitle} — صفحة ${n}`;
-  store.setLastRead({ b: bookId, p: `page:${n}`, kind: 'page', n, title: `${meta.shortTitle} — صفحة ${n}`, bookTitle: meta.shortTitle });
-  const go = (k) => { if (k >= 1 && k <= N) navigate(href.page(bookId, k)); };
-  const sec = [...meta.toc].reverse().find((t) => t.page <= n);
+  const [pw, ph] = meta.pageSize || [1182, 1674];
+  const secOf = (k) => [...(meta.toc || [])].reverse().find((t) => t.page <= k);
+  const crumb = h('div', { class: 'crumb' });
+  const pageNo = h('span', { class: 'page-no' });
   const tools = h('div', { class: 'reader-tools' },
     backIcon(href.book(bookId)),
-    h('a', { class: 'icon-btn', href: href.book(bookId), 'aria-label': 'الفهرس', title: 'الفهرس' }, svg(ICONS.list)),
-    h('div', { class: 'crumb' }, h('a', { href: href.book(bookId) }, meta.shortTitle), sec ? ` › ${sec.title}` : ''),
-    h('span', { class: 'page-no' }, `صفحة ${n} من ${N}`));
-  const img = meta.pdf ? h('canvas', { class: 'page-img', role: 'img', 'aria-label': `${meta.title} — صفحة ${n}` })
-    : h('img', { class: 'page-img', src: meta.pages[n - 1], alt: `${meta.title} — صفحة ${n}`, width: String((meta.pageSize || [1182])[0]), height: String((meta.pageSize || [0, 1674])[1]), decoding: 'async', fetchpriority: 'high' });
-  const sheet = h('figure', { class: 'page-sheet' }, img);
-  const loading = meta.pdf ? h('div', { class: 'pdf-loading' }, 'جارٍ تحميل الصفحة…') : null;
-  if (meta.pdf) sheet.append(loading);
-  // السحب يمينًا/يسارًا للتنقل (اتجاه الكتاب العربي: السحب لليسار = الصفحة التالية)
-  let x0 = null, y0 = null;
-  sheet.addEventListener('touchstart', (e) => { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } }, { passive: true });
-  sheet.addEventListener('touchend', (e) => {
-    if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && (!window.visualViewport || window.visualViewport.scale <= 1.01)) go(dx < 0 ? n + 1 : n - 1);
-  });
-  const pager = h('nav', { class: 'pager', 'aria-label': 'التنقل بين الصفحات' },
-    n > 1 ? h('a', { class: 'prev', href: href.page(bookId, n - 1), rel: 'prev' }, h('small', null, '→ السابقة'), h('span', { class: 't' }, `صفحة ${n - 1}`)) : h('span', { class: 'ph' }),
-    n < N ? h('a', { class: 'next', href: href.page(bookId, n + 1), rel: 'next' }, h('small', null, 'التالية ←'), h('span', { class: 't' }, `صفحة ${n + 1}`)) : h('span', { class: 'ph' }));
-  // تحميل الصفحة التالية مسبقًا
-  if (!meta.pdf) for (const k of [n, n + 1, n - 2]) if (k >= 0 && k < N && k !== n - 1) { const pre = new Image(); pre.src = meta.pages[k]; }
-  const view = h('div', { class: 'reader pages-reader' }, tools, h('div', { class: 'page' }, sheet, pager));
-  if (meta.pdf) view._after = () => renderPdfPage(meta.pdf, n, img, sheet).then(() => loading.remove()).catch((e) => { console.error(e); loading.textContent = navigator.onLine ? 'تعذّر عرض الصفحة.' : 'أنت غير متصل بالإنترنت، وهذا الكتاب لم يُحفظ على الجهاز بعد.'; });
-  view._keys = (e) => { if (e.key === 'ArrowLeft') go(n + 1); if (e.key === 'ArrowRight') go(n - 1); };
+    h('a', { class: 'icon-btn', href: href.book(bookId), 'aria-label': 'صفحة الكتاب', title: 'صفحة الكتاب' }, svg(ICONS.list)),
+    crumb, pageNo);
+  // القراءة متصلة: كل الصفحات تحت بعضها، تُحمَّل صورها عند الاقتراب منها
+  const sheets = [];
+  const stack = h('div', { class: 'page-stack' });
+  for (let k = 1; k <= N; k++) {
+    const img = h('img', { class: 'page-img', alt: `${meta.title} — صفحة ${k}`, width: String(pw), height: String(ph), decoding: 'async',
+      loading: Math.abs(k - n) <= 1 ? 'eager' : 'lazy', src: meta.pages[k - 1] });
+    const fig = h('figure', { class: 'page-sheet', id: `pg-${k}`, 'data-n': k }, img);
+    sheets.push(fig); stack.append(fig);
+  }
+  let cur = 0;
+  const setCur = (k) => {
+    if (k === cur) return; cur = k;
+    const sec = secOf(k);
+    crumb.replaceChildren(h('a', { href: href.book(bookId) }, meta.shortTitle), sec ? ` › ${sec.title}` : '');
+    pageNo.textContent = `صفحة ${k} من ${N}`;
+    document.title = `${meta.shortTitle} — صفحة ${k}`;
+    setUrlQuietly(href.page(bookId, k));
+    store.setLastRead({ b: bookId, p: `page:${k}`, kind: 'page', n: k, title: `${meta.shortTitle} — صفحة ${k}`, bookTitle: meta.shortTitle });
+  };
+  setCur(n);
+  const visible = () => {           // الصفحة التي في منتصف الشاشة
+    const y = innerHeight * 0.45; let lo = 0, hi = sheets.length - 1;
+    while (lo < hi) { const m = (lo + hi + 1) >> 1; if (sheets[m].getBoundingClientRect().top <= y) lo = m; else hi = m - 1; }
+    return lo + 1;
+  };
+  const goTo = (k, smooth) => document.getElementById(`pg-${k}`)?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+  const view = h('div', { class: 'reader pages-reader' }, tools, h('div', { class: 'page' }, stack));
+  view._after = () => { if (n > 1) { goTo(n); setTimeout(() => goTo(n), 400); } };
+  view._scroll = () => setCur(visible());
+  view._keys = (e) => { if (e.key === 'ArrowLeft') goTo(Math.min(N, cur + 1), true); if (e.key === 'ArrowRight') goTo(Math.max(1, cur - 1), true); };
   if (meta.toc && meta.toc.length) attachToc(view, 'الفهرس', () => {
-    const cur = [...meta.toc].map((t, i) => [t, i]).reverse().find(([t]) => t.page <= n);
-    return meta.toc.map((t, i) => ({ title: t.title, sub: `صفحة ${t.page}`, href: href.page(bookId, t.page), current: cur && cur[1] === i }));
+    const c = [...meta.toc].map((t, i) => [t, i]).reverse().find(([t]) => t.page <= cur);
+    return meta.toc.map((t, i) => ({ title: t.title, sub: `صفحة ${t.page}`, target: `pg-${t.page}`, current: c && c[1] === i }));
   });
   return view;
 }

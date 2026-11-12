@@ -550,3 +550,8 @@ canvas.page-img { display: block; width: 100%; height: auto; background: #fff; m
 .toc-item .ti-check { color: var(--emerald); font-weight: 700; text-align: center; }
 .toc-item .ti-t { line-height: 1.6; }
 .toc-item em { font-style: normal; font-size: .7rem; margin-inline-start: 8px; padding: 1px 8px; border-radius: 999px; background: #b8893a; color: #fff; vertical-align: 2px; }
+
+/* القراءة المتصلة للكتب المصوّرة */
+.page-stack { display: grid; gap: 14px; }
+.page-stack .page-sheet { margin: 0; scroll-margin-top: calc(var(--bar-h) + 60px); }
+.page-stack .page-img { width: 100%; height: auto; background: #fff; }
