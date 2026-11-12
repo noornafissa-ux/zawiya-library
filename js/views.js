@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=214a428b93';
-import * as data from './data.js?v=214a428b93';
-import * as store from './store.js?v=214a428b93';
-import { search, queryWords } from './search.js?v=214a428b93';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=51cd8b3975';
+import * as data from './data.js?v=51cd8b3975';
+import * as store from './store.js?v=51cd8b3975';
+import { search, queryWords } from './search.js?v=51cd8b3975';
 
 const href = {
   library: () => '/',
@@ -361,6 +361,11 @@ function proseView(meta) {
     store.setLastRead({ b: meta.id, p: 'prose', kind: 'qasida', title: `${meta.shortTitle}${cur ? ` — ${cur}` : ''}`, bookTitle: meta.shortTitle });
   }, 400); };
   store.setLastRead({ b: meta.id, p: 'prose', kind: 'qasida', title: meta.shortTitle, bookTitle: meta.shortTitle });
+  attachToc(view, 'الحروف', () => {
+    const its = meta.sections.map((s, i) => ({ s, i })).filter((x) => x.s.title);
+    let cur = -1; its.forEach((x, k) => { const el = document.getElementById(`s-${x.i}`); if (el && el.getBoundingClientRect().top < innerHeight * 0.4) cur = k; });
+    return its.map((x, k) => ({ title: x.s.title, target: `s-${x.i}`, current: k === cur }));
+  });
   return view;
 }
 
@@ -430,6 +435,10 @@ function qasidaView(meta) {
     store.setLastRead({ b: meta.id, p: 'qasida', kind: 'qasida', ch: cur || 1, title: `${meta.shortTitle}${cur ? ` — الفصل ${ORD[cur - 1]}` : ''}`, bookTitle: meta.shortTitle });
   }, 400); };
   store.setLastRead({ b: meta.id, p: 'qasida', kind: 'qasida', ch: 1, title: meta.shortTitle, bookTitle: meta.shortTitle });
+  attachToc(view, 'فصول القصيدة', () => {
+    let cur = -1; meta.chapters.forEach((c, i) => { const el = document.getElementById(`ch-${i + 1}`); if (el && el.getBoundingClientRect().top < innerHeight * 0.4) cur = i; });
+    return meta.chapters.map((c, i) => ({ title: c.title, sub: `الفصل ${ORD[i] || arNum(i + 1)}`, target: `ch-${i + 1}`, current: i === cur }));
+  });
   return view;
 }
 
@@ -492,6 +501,36 @@ async function renderPdfPage(url, n, canvas, box) {
   if (n < doc.numPages) doc.getPage(n + 1).catch(() => {});   // تجهيز الصفحة التالية
 }
 
+// ——— زرّ الفهرس العائم: قائمة تظهر من الأسفل، والقسم الحالي عليه علامة، وورد اليوم مميّز ———
+const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const normDay = (s) => (s || '').replace(/[إأآ]/g, 'ا').replace(/[ً-ْ]/g, '');
+function attachToc(view, heading, getItems) {
+  const today = normDay(DAYS[new Date().getDay()]);
+  const close = () => { sheet.hidden = true; scrim.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+  const scrim = h('div', { class: 'toc-scrim', hidden: true, onclick: close });
+  const list = h('div', { class: 'toc-sheet-list', role: 'list' });
+  const sheet = h('div', { class: 'toc-sheet', hidden: true, role: 'dialog', 'aria-label': heading },
+    h('div', { class: 'toc-sheet-head' }, h('span', { class: 'grip', 'aria-hidden': 'true' }), h('b', null, heading),
+      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'إغلاق', onclick: close }, svg('<path d="M6 6l12 12M18 6L6 18"/>'))), list);
+  const open = () => {
+    const items = getItems();
+    list.replaceChildren(...items.map((it) => {
+      const isToday = normDay(it.title).includes(today);
+      const row = h('a', { class: `toc-item${it.current ? ' cur' : ''}${isToday ? ' today' : ''}`, href: it.href || `#${it.target}`, role: 'listitem',
+        onclick: (e) => { if (it.target) { e.preventDefault(); close(); document.getElementById(it.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } else close(); } },
+        h('span', { class: 'ti-t' }, it.title, isToday ? h('em', null, 'ورد اليوم') : null),
+        it.sub ? h('small', null, it.sub) : null,
+        h('span', { class: 'ti-check', 'aria-hidden': 'true' }, it.current ? '✓' : ''));
+      return row;
+    }));
+    sheet.hidden = false; scrim.hidden = false; btn.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => (list.querySelector('.cur') || list.querySelector('.today'))?.scrollIntoView({ block: 'center' }));
+  };
+  const btn = h('button', { class: 'toc-fab', type: 'button', 'aria-label': heading, title: heading, 'aria-expanded': 'false', onclick: open },
+    svg('<path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/>'));
+  view.append(btn, scrim, sheet);
+}
+
 export async function pageView(bookId, nStr) {
   let meta;
   try { meta = await data.book(bookId); } catch { return notFound('هذا الكتاب غير موجود في المكتبة.'); }
@@ -527,6 +566,10 @@ export async function pageView(bookId, nStr) {
   const view = h('div', { class: 'reader pages-reader' }, tools, h('div', { class: 'page' }, sheet, pager));
   if (meta.pdf) view._after = () => renderPdfPage(meta.pdf, n, img, sheet).then(() => loading.remove()).catch((e) => { console.error(e); loading.textContent = navigator.onLine ? 'تعذّر عرض الصفحة.' : 'أنت غير متصل بالإنترنت، وهذا الكتاب لم يُحفظ على الجهاز بعد.'; });
   view._keys = (e) => { if (e.key === 'ArrowLeft') go(n + 1); if (e.key === 'ArrowRight') go(n - 1); };
+  if (meta.toc && meta.toc.length) attachToc(view, 'الفهرس', () => {
+    const cur = [...meta.toc].map((t, i) => [t, i]).reverse().find(([t]) => t.page <= n);
+    return meta.toc.map((t, i) => ({ title: t.title, sub: `صفحة ${t.page}`, href: href.page(bookId, t.page), current: cur && cur[1] === i }));
+  });
   return view;
 }
 
@@ -695,6 +738,7 @@ export async function poemView(bookId, poemId, params) {
     const max = document.documentElement.scrollHeight - innerHeight;
     if (max > 0) store.setLastScroll(bookId, poemId, scrollY / max);
   };
+  attachToc(view, loc.section.title || meta.shortTitle, () => loc.section.poems.map((p) => ({ title: display(p.title), sub: p.n ? String(p.n) : '', href: href.poem(bookId, p.id), current: p.id === poemId })));
   return view;
 }
 /**
