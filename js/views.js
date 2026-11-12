@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=406612bd2b';
-import * as data from './data.js?v=406612bd2b';
-import * as store from './store.js?v=406612bd2b';
-import { search, queryWords } from './search.js?v=406612bd2b';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=b1e76a84a1';
+import * as data from './data.js?v=b1e76a84a1';
+import * as store from './store.js?v=b1e76a84a1';
+import { search, queryWords } from './search.js?v=b1e76a84a1';
 
 const href = {
   library: () => '/',
@@ -551,7 +551,7 @@ export async function pageView(bookId, nStr) {
   for (let k = 1; k <= N; k++) {
     const near = Math.abs(k - n) <= 2;
     const img = h('img', { class: 'page-img', alt: `${meta.title} — صفحة ${k}`, width: String(pw), height: String(ph), decoding: 'async',
-      loading: near ? 'eager' : 'lazy', src: (meta.thumbs && !(k === n)) ? meta.thumbs[k - 1] : meta.pages[k - 1] });
+      loading: near ? 'eager' : 'lazy', src: meta.thumbs ? meta.thumbs[k - 1] : meta.pages[k - 1] });
     const fig = h('figure', { class: 'page-sheet', id: `pg-${k}`, 'data-n': k }, img);
     sheets.push(fig); stack.append(fig);
   }
