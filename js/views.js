@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=cdc360e136';
-import * as data from './data.js?v=cdc360e136';
-import * as store from './store.js?v=cdc360e136';
-import { search, queryWords } from './search.js?v=cdc360e136';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=bb555d5677';
+import * as data from './data.js?v=bb555d5677';
+import * as store from './store.js?v=bb555d5677';
+import { search, queryWords } from './search.js?v=bb555d5677';
 
 const href = {
   library: () => '/',
@@ -536,6 +536,39 @@ function attachToc(view, heading, getItems) {
   view.append(btn, scrim, sheet);
 }
 
+// تكبير الصفحات بإصبعين (أو بنقرتين متتاليتين) مع التحريك يمينًا ويسارًا
+function attachZoom(wrap, stack) {
+  let z = 1, g = null, lastTap = 0, raf = 0;
+  const apply = (nz, mx, my) => {        // mx,my: موضع الإصبعين على الشاشة — تبقى النقطة نفسها تحتهما
+    nz = Math.min(4, Math.max(1, nz));
+    const r = wrap.getBoundingClientRect();
+    const px = (wrap.scrollLeft + mx - r.left) / z, py = (my - r.top) / z;
+    z = nz; stack.style.width = z === 1 ? '' : `${z * 100}%`;
+    wrap.classList.toggle('zoomed', z > 1);
+    wrap.scrollLeft = px * z - (mx - r.left);
+    const top = wrap.getBoundingClientRect().top + scrollY;
+    window.scrollTo({ top: top + py * z - my, behavior: 'instant' });
+  };
+  const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      g = { d: dist(e.touches), z, mx: (e.touches[0].clientX + e.touches[1].clientX) / 2, my: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+    } else if (e.touches.length === 1) {
+      const now = Date.now(), t = e.touches[0];
+      if (now - lastTap < 300) { e.preventDefault(); apply(z > 1.05 ? 1 : 2.2, t.clientX, t.clientY); lastTap = 0; } else lastTap = now;
+    }
+  }, { passive: false });
+  wrap.addEventListener('touchmove', (e) => {
+    if (!g || e.touches.length !== 2) return;
+    e.preventDefault();
+    const nz = g.z * dist(e.touches) / g.d;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(() => apply(nz, g.mx, g.my));
+  }, { passive: false });
+  wrap.addEventListener('touchend', (e) => { if (e.touches.length < 2) g = null; });
+  for (const ev of ['gesturestart', 'gesturechange']) wrap.addEventListener(ev, (e) => e.preventDefault());   // آيفون: نمنع تكبير الصفحة كلّها
+  wrap.addEventListener('wheel', (e) => { if (e.ctrlKey) { e.preventDefault(); apply(z * (e.deltaY < 0 ? 1.1 : 0.9), e.clientX, e.clientY); } }, { passive: false });
+}
+
 export async function pageView(bookId, nStr) {
   let meta;
   try { meta = await data.book(bookId); } catch { return notFound('هذا الكتاب غير موجود في المكتبة.'); }
@@ -587,7 +620,9 @@ export async function pageView(bookId, nStr) {
     return lo + 1;
   };
   const goTo = (k, smooth) => document.getElementById(`pg-${k}`)?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-  const view = h('div', { class: 'reader pages-reader' }, tools, h('div', { class: 'page' }, stack));
+  const wrap = h('div', { class: 'zoom-wrap', dir: 'ltr' }, stack);
+  attachZoom(wrap, stack);
+  const view = h('div', { class: 'reader pages-reader' }, tools, h('div', { class: 'page' }, wrap));
   view._after = () => { if (n > 1) { goTo(n); setTimeout(() => goTo(n), 400); } };
   view._scroll = () => setCur(visible());
   view._keys = (e) => { if (e.key === 'ArrowLeft') goTo(Math.min(N, cur + 1), true); if (e.key === 'ArrowRight') goTo(Math.max(1, cur - 1), true); };

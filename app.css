@@ -576,3 +576,12 @@ canvas.page-img { display: block; width: 100%; height: auto; background: #fff; m
 .sp-menu[hidden] { display: none; }
 .sp-menu button { padding: 7px 12px; border-radius: 8px; font: inherit; font-size: .9rem; justify-content: start; }
 .sp-menu button.on { background: color-mix(in srgb, var(--emerald) 12%, transparent); color: var(--emerald); font-weight: 600; }
+
+/* الكتب المصوّرة: الورقة أقرب إلى حافة الشاشة، وتكبير مع تحريك أفقي */
+.pages-reader .page { padding-left: max(4px, env(safe-area-inset-left, 0px)); padding-right: max(4px, env(safe-area-inset-right, 0px)); padding-top: 8px; }
+.pages-reader .page-stack { gap: 8px; }
+.pages-reader .page-sheet { border-radius: 4px; touch-action: pan-x pan-y; }
+.zoom-wrap { overflow-x: auto; overflow-y: hidden; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.zoom-wrap::-webkit-scrollbar { display: none; }
+.zoom-wrap .page-stack { max-width: none; }
+.zoom-wrap.zoomed .page-sheet { box-shadow: none; }
