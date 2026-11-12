@@ -1,8 +1,8 @@
 // نقطة البدء: التوجيه، القائمة، الإعدادات، عامل الخدمة
-import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=288bcccb64';
-import * as store from './store.js?v=288bcccb64';
-import * as data from './data.js?v=288bcccb64';
-import * as V from './views.js?v=288bcccb64';
+import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=2f9d2f0f5b';
+import * as store from './store.js?v=2f9d2f0f5b';
+import * as data from './data.js?v=2f9d2f0f5b';
+import * as V from './views.js?v=2f9d2f0f5b';
 
 const main = document.getElementById('main');
 let current = null;
@@ -79,7 +79,8 @@ async function fillDrawerBooks() {
     const shelves = lib.shelves && lib.shelves.length ? lib.shelves : [{ title: 'الدواوين', books: lib.books.map((b) => b.id) }];
     // قسم لكل رفّ في المكتبة: الدواوين، المدائح النبوية، الأوراد…
     const secs = shelves.map((sh) => {
-      const links = sh.books.map((id) => byId[id]).filter(Boolean).map((b) => h('a', { href: V.href.book(b.id) }, V.emblem(), b.shortTitle));
+      const links = [...(sh.books || []).map((id) => byId[id]).filter(Boolean).map((b) => h('a', { href: V.href.book(b.id) }, V.emblem(), b.shortTitle)),
+        ...(sh.links || []).map((l) => h('a', { href: l.url, target: '_blank', rel: 'noopener' }, V.emblem(), l.title))];
       return links.length ? h('div', { class: 'drawer-sec' }, h('h3', null, sh.title), ...links) : null;
     }).filter(Boolean);
     first.replaceWith(...secs);

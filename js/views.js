@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=288bcccb64';
-import * as data from './data.js?v=288bcccb64';
-import * as store from './store.js?v=288bcccb64';
-import { search, queryWords } from './search.js?v=288bcccb64';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=2f9d2f0f5b';
+import * as data from './data.js?v=2f9d2f0f5b';
+import * as store from './store.js?v=2f9d2f0f5b';
+import { search, queryWords } from './search.js?v=2f9d2f0f5b';
 
 const href = {
   library: () => '/',
@@ -90,6 +90,17 @@ export function domeCover(title) {
   return s;
 }
 
+// بطاقة رابط خارجي (تطبيق، قناة تلغرام…)
+const LINK_ICONS = {
+  telegram: '<path d="M21.5 4.5L2.8 11.7c-.9.4-.9 1.5.1 1.8l4.7 1.5 1.8 5.6c.3.8 1.2 1 1.8.4l2.6-2.4 4.9 3.6c.7.5 1.6.1 1.8-.7L22.9 5.8c.2-1-.6-1.7-1.4-1.3z" fill="currentColor" stroke="none"/><path d="M7.6 15l9.8-7.2-7.6 8.6" stroke="#fff" stroke-width="1.2" fill="none"/>',
+  apple: '<path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8s1.9.8 3.2.8c1.3 0 2.1-1.2 2.9-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.4-.9-2.4-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.6-2.8 1.4-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.5 2.8-1.3z" fill="currentColor" stroke="none"/>',
+  android: '<path d="M7 9h10v8a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1zM5 9.5v5M19 9.5v5M10 18v3M14 18v3M7.5 8a4.5 4.5 0 0 1 9 0z" /><path d="M8.5 3.5l1.3 2M15.5 3.5l-1.3 2"/><circle cx="10" cy="6.4" r=".5" fill="currentColor"/><circle cx="14" cy="6.4" r=".5" fill="currentColor"/>',
+};
+const linkCard = (l) => h('a', { class: `link-card lc-${l.icon || 'link'}`, href: l.url, target: '_blank', rel: 'noopener' },
+  h('span', { class: 'lc-ico' }, svg(LINK_ICONS[l.icon] || ICONS.external)),
+  h('span', { class: 'lc-txt' }, h('b', null, l.title), l.sub ? h('small', { dir: 'auto' }, l.sub) : null),
+  h('span', { class: 'lc-go', 'aria-hidden': 'true' }, svg(ICONS.external)));
+
 // ═══════════ المكتبة ═══════════
 export async function libraryView() {
   const lib = await data.library();
@@ -111,7 +122,7 @@ export async function libraryView() {
       h('div', { class: 'tile-meta' }, metaLine(b))));
   const byId = Object.fromEntries(lib.books.map((b) => [b.id, b]));
   const shelves = (lib.shelves && lib.shelves.length ? lib.shelves : [{ id: 'all', title: lib.title, books: lib.books.map((b) => b.id) }])
-    .map((sh) => ({ ...sh, list: sh.books.map((id) => byId[id]).filter(Boolean) })).filter((sh) => sh.list.length);
+    .map((sh) => ({ ...sh, list: (sh.books || []).map((id) => byId[id]).filter(Boolean), links: sh.links || [] })).filter((sh) => sh.list.length || sh.links.length);
   const go = (id) => (e) => { e.preventDefault(); document.getElementById(`shelf-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   const hero = h('header', { class: 'home-hero' },
     h('div', { class: 'hero-in' },
@@ -119,14 +130,15 @@ export async function libraryView() {
       h('p', { class: 'hero-tag' }, 'دواوين ومدائح وأوراد للقراءة والسماع'),
       h('a', { class: 'hero-search', href: '/search' }, svg(ICONS.search), h('span', null, 'ابحث عن قصيدة أو بيت…')),
       h('nav', { class: 'hero-chips', 'aria-label': 'أقسام المكتبة' },
-        shelves.map((sh) => h('a', { href: `#shelf-${sh.id}`, onclick: go(sh.id) }, sh.title, h('small', null, String(sh.list.length)))))));
+        shelves.map((sh) => h('a', { href: `#shelf-${sh.id}`, onclick: go(sh.id) }, sh.title, h('small', null, String(sh.list.length || sh.links.length)))))));
   const blocks = shelves.map((sh) => h('section', { class: 'shelf', id: `shelf-${sh.id}`, 'aria-label': sh.title },
     h('header', { class: 'shelf-head' },
       h('span', { class: 'sh-line', 'aria-hidden': 'true' }),
       h('h2', null, sh.title),
       h('span', { class: 'sh-line', 'aria-hidden': 'true' })),
     sh.subtitle ? h('p', { class: 'shelf-sub' }, sh.subtitle) : null,
-    h('div', { class: 'shelf-books' }, sh.list.map(tile))));
+    sh.list.length ? h('div', { class: 'shelf-books' }, sh.list.map(tile)) : null,
+    sh.links.length ? h('div', { class: 'link-cards' }, sh.links.map(linkCard)) : null));
   const view = h('div', { class: 'home' }, hero,
     page('wide home-page', last ? continueCard(last, lib) : null, ...blocks,
       h('footer', { class: 'home-foot' }, ornament(), h('p', null, 'مكتبة الزاوية التمسّكية'))));
