@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=481f1eb216';
-import * as data from './data.js?v=481f1eb216';
-import * as store from './store.js?v=481f1eb216';
-import { search, queryWords } from './search.js?v=481f1eb216';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=301902ee90';
+import * as data from './data.js?v=301902ee90';
+import * as store from './store.js?v=301902ee90';
+import { search, queryWords } from './search.js?v=301902ee90';
 
 const href = {
   library: () => '/',
@@ -1017,14 +1017,15 @@ function recordingsPanel(recs, title, author, bookTitle) {
   }
   const box = h('section', { class: 'listen', 'aria-label': 'التسجيل' });
   recs.forEach((r) => {
-    const label = r.reciter ? `إنشاد: ${r.reciter}` : (recs.length > 1 ? `التسجيل ${r.i}` : 'التسجيل');
+    const label = r.reciter ? `إنشاد: ${r.reciter}` : (recs.length > 1 ? `التسجيل ${r.i}` : '');
     const playable = !/^https?:/.test(r.src) || AUDIO_EXT.test(r.src);
     if (playable) {
-      const audio = h('audio', { controls: true, preload: 'none', src: r.src });
+      const audio = h('audio', { preload: 'metadata', src: r.src });
       // إن تعذّر التشغيل داخل الصفحة (الرابط أو الصيغة): نعرض رابطًا يفتح التسجيل مباشرة
       audio.addEventListener('error', () => {
-        if (audio.nextElementSibling?.classList.contains('rec-fallback')) return;
-        audio.after(h('p', { class: 'rec-fallback' }, 'تعذّر تشغيل التسجيل هنا. ',
+        const host = audio.closest('.slim-player') || audio;
+        if (host.nextElementSibling?.classList.contains('rec-fallback')) return;
+        host.after(h('p', { class: 'rec-fallback' }, 'تعذّر تشغيل التسجيل هنا. ',
           h('a', { href: r.src, target: '_blank', rel: 'noopener' }, 'افتحه في صفحة مستقلة')));
       });
       audio.addEventListener('play', () => {
@@ -1033,13 +1034,44 @@ function recordingsPanel(recs, title, author, bookTitle) {
           navigator.mediaSession.metadata = new MediaMetadata({ title, artist: r.reciter || author, album: bookTitle });
         }
       });
-      box.append(h('div', { class: 'rec' }, h('div', { class: 'lbl' }, svg(ICONS.headphones), h('span', null, label), r.note ? h('small', null, r.note) : null), audio));
+      box.append(h('div', { class: 'rec' }, (label || r.note) ? h('div', { class: 'lbl' }, label ? h('span', null, label) : null, r.note ? h('small', null, r.note) : null) : null, slimPlayer(audio)));
     } else {
       box.append(h('div', { class: 'rec' }, h('div', { class: 'lbl' }, svg(ICONS.headphones), h('span', null, label), r.note ? h('small', null, r.note) : null),
         h('a', { class: 'btn ghost', href: r.src, target: '_blank', rel: 'noopener' }, svg(ICONS.external), 'الاستماع إلى التسجيل')));
     }
   });
   return box;
+}
+
+// شريط تشغيل رفيع: تشغيل/إيقاف، شريط التقدّم، الوقت المتبقّي، وسرعة التشغيل
+const PLAY_I = '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/>';
+const PAUSE_I = '<path d="M7 4.5h3.6v15H7zM13.4 4.5H17v15h-3.6z" fill="currentColor" stroke="none"/>';
+const GEAR_I = '<path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.5A7.6 7.6 0 0 0 7 6.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.6 7.6 0 0 0 2.6-1.5l2.4 1 2-3.4z"/>';
+const fmtT = (t) => { if (!isFinite(t) || t < 0) t = 0; t = Math.round(t); const m = Math.floor(t / 60), s2 = t % 60; return `${String(m).padStart(2, '0')}:${String(s2).padStart(2, '0')}`; };
+function slimPlayer(audio) {
+  const btn = h('button', { class: 'sp-play', type: 'button', 'aria-label': 'تشغيل' }, svg(PLAY_I));
+  const bar = h('input', { class: 'sp-bar', type: 'range', min: '0', max: '1000', value: '0', step: '1', 'aria-label': 'موضع التسجيل' });
+  const time = h('span', { class: 'sp-time' }, '--:--');
+  const speeds = [0.75, 1, 1.25, 1.5];
+  const menu = h('div', { class: 'sp-menu', hidden: true }, speeds.map((v) => h('button', { type: 'button', 'data-v': v, class: v === 1 ? 'on' : '', onclick: () => {
+    audio.playbackRate = v; menu.querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.v === v)); menu.hidden = true; } }, v === 1 ? 'عادية' : `×${v}`)));
+  const gear = h('button', { class: 'sp-gear', type: 'button', 'aria-label': 'سرعة التشغيل', title: 'سرعة التشغيل', onclick: () => { menu.hidden = !menu.hidden; } }, svg(GEAR_I));
+  let seeking = false;
+  const paint = () => {
+    const d = audio.duration, c = audio.currentTime;
+    if (!seeking && isFinite(d) && d > 0) bar.value = String(Math.round((c / d) * 1000));
+    bar.style.setProperty('--p', `${(+bar.value) / 10}%`);
+    time.textContent = isFinite(d) ? `-${fmtT(d - c)}` : '--:--';
+  };
+  btn.onclick = () => { if (audio.paused) audio.play().catch(() => {}); else audio.pause(); };
+  audio.addEventListener('play', () => { btn.replaceChildren(svg(PAUSE_I)); btn.setAttribute('aria-label', 'إيقاف مؤقّت'); });
+  audio.addEventListener('pause', () => { btn.replaceChildren(svg(PLAY_I)); btn.setAttribute('aria-label', 'تشغيل'); });
+  audio.addEventListener('ended', () => { btn.replaceChildren(svg(PLAY_I)); });
+  ['timeupdate', 'loadedmetadata', 'durationchange'].forEach((ev) => audio.addEventListener(ev, paint));
+  bar.addEventListener('input', () => { seeking = true; bar.style.setProperty('--p', `${(+bar.value) / 10}%`);
+    if (isFinite(audio.duration)) time.textContent = `-${fmtT(audio.duration * (1 - bar.value / 1000))}`; });
+  bar.addEventListener('change', () => { if (isFinite(audio.duration)) audio.currentTime = audio.duration * bar.value / 1000; seeking = false; });
+  return h('div', { class: 'slim-player', dir: 'ltr' }, audio, btn, bar, time, h('div', { class: 'sp-gear-w' }, gear, menu));
 }
 
 function sizeToast(v) { toast(`حجم الخط: ${Math.round(v * 100)}%`); }

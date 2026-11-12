@@ -555,3 +555,24 @@ canvas.page-img { display: block; width: 100%; height: auto; background: #fff; m
 .page-stack { display: grid; gap: 14px; }
 .page-stack .page-sheet { margin: 0; scroll-margin-top: calc(var(--bar-h) + 60px); }
 .page-stack .page-img { width: 100%; height: auto; background: #fff; }
+
+/* شريط التسجيل الرفيع */
+.listen { background: transparent; border: 0; padding: 0; gap: 8px; }
+.listen .lbl { font-size: .95rem; justify-content: center; }
+.slim-player { display: flex; align-items: center; gap: 12px; background: var(--paper, #fff); border-radius: 14px; padding: 8px 14px; box-shadow: 0 2px 10px rgb(0 0 0 / 10%), 0 0 0 1px var(--line); height: 48px; box-sizing: border-box; }
+.slim-player audio { display: none; }
+.slim-player button { background: none; border: 0; padding: 0; cursor: pointer; display: grid; place-items: center; color: var(--ink, #3a4250); }
+.sp-play svg { width: 22px; height: 22px; }
+.sp-gear svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.sp-bar { --p: 0%; flex: 1; min-width: 0; height: 18px; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+.sp-bar::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, var(--emerald) var(--p), color-mix(in srgb, var(--muted) 30%, transparent) var(--p)); }
+.sp-bar::-moz-range-track { height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--muted) 30%, transparent); }
+.sp-bar::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--emerald); }
+.sp-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: #fff; border: 1.5px solid color-mix(in srgb, var(--muted) 60%, transparent); box-shadow: 0 1px 3px rgb(0 0 0 / 20%); }
+.sp-bar::-moz-range-thumb { width: 13px; height: 13px; border-radius: 50%; background: #fff; border: 1.5px solid color-mix(in srgb, var(--muted) 60%, transparent); }
+.sp-time { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 3.4em; text-align: center; font-family: system-ui, sans-serif; }
+.sp-gear-w { position: relative; }
+.sp-menu { position: absolute; bottom: calc(100% + 10px); right: -6px; background: var(--paper, #fff); border-radius: 12px; box-shadow: 0 6px 20px rgb(0 0 0 / 16%), 0 0 0 1px var(--line); padding: 6px; display: grid; gap: 2px; z-index: 5; direction: rtl; min-width: 92px; }
+.sp-menu[hidden] { display: none; }
+.sp-menu button { padding: 7px 12px; border-radius: 8px; font: inherit; font-size: .9rem; justify-content: start; }
+.sp-menu button.on { background: color-mix(in srgb, var(--emerald) 12%, transparent); color: var(--emerald); font-weight: 600; }
