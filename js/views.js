@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=7c0629825e';
-import * as data from './data.js?v=7c0629825e';
-import * as store from './store.js?v=7c0629825e';
-import { search, queryWords } from './search.js?v=7c0629825e';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=04d4b01c32';
+import * as data from './data.js?v=04d4b01c32';
+import * as store from './store.js?v=04d4b01c32';
+import { search, queryWords } from './search.js?v=04d4b01c32';
 
 const href = {
   library: () => '/',
@@ -470,12 +470,10 @@ function pagesBookView(meta) {
       h('div', { class: 'actions' },
         resume ? h('a', { class: 'btn', href: href.page(meta.id, resume.n) }, `متابعة القراءة (صفحة ${resume.n})`) : null,
         h('a', { class: resume ? 'btn ghost' : 'btn', href: href.page(meta.id, 1) }, 'ابدأ من الأول'))));
-  const toc = meta.toc.length ? h('section', { class: 'toc', 'aria-label': 'الفهرس' },
-    h('h2', { class: 'h-display', style: 'font-size:1.6rem' }, 'الفهرس'),
-    h('div', { class: 'toc-sec open-sec' }, h('ul', { class: 'toc-list' }, meta.toc.map((t) =>
-      h('li', null, h('a', { href: href.page(meta.id, t.page) }, h('span', { class: 'n' }, t.page), h('span', null, h('span', { class: 't' }, t.title)))))))) : null;
   if (!meta.pdf && meta.pages.length) setTimeout(() => { const last = store.lastRead(); const k = last && last.b === meta.id && last.kind === 'page' ? last.n : 1; const im = new Image(); im.src = meta.pages[k - 1]; }, 300);
-  return page('', backLink('/'), hero, toc, offlinePanel(meta));
+  const view = page('', backLink('/'), hero, offlinePanel(meta));
+  if (meta.toc.length) attachToc(view, 'الفهرس', () => meta.toc.map((t) => ({ title: t.title, sub: `صفحة ${t.page}`, href: href.page(meta.id, t.page), current: false })));
+  return view;
 }
 // ——— كتب PDF: تُرسم الصفحة في المتصفح (ملف واحد بدل مئات الصور) ———
 let pdfLib = null; const pdfDocs = new Map();
