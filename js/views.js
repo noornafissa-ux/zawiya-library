@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=ddc2545dbf';
-import * as data from './data.js?v=ddc2545dbf';
-import * as store from './store.js?v=ddc2545dbf';
-import { search, queryWords } from './search.js?v=ddc2545dbf';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=406612bd2b';
+import * as data from './data.js?v=406612bd2b';
+import * as store from './store.js?v=406612bd2b';
+import { search, queryWords } from './search.js?v=406612bd2b';
 
 const href = {
   library: () => '/',
@@ -549,14 +549,25 @@ export async function pageView(bookId, nStr) {
   const sheets = [];
   const stack = h('div', { class: 'page-stack' });
   for (let k = 1; k <= N; k++) {
+    const near = Math.abs(k - n) <= 2;
     const img = h('img', { class: 'page-img', alt: `${meta.title} — صفحة ${k}`, width: String(pw), height: String(ph), decoding: 'async',
-      loading: Math.abs(k - n) <= 1 ? 'eager' : 'lazy', src: meta.pages[k - 1] });
+      loading: near ? 'eager' : 'lazy', src: (meta.thumbs && !(k === n)) ? meta.thumbs[k - 1] : meta.pages[k - 1] });
     const fig = h('figure', { class: 'page-sheet', id: `pg-${k}`, 'data-n': k }, img);
     sheets.push(fig); stack.append(fig);
   }
+  // الصفحة الكاملة الجودة تُجلب مسبقًا لما حولك (نسخة خفيفة تظهر أولًا ريثما تصل)
+  const sharp = new Set();
+  const upgrade = (k) => {
+    if (k < 1 || k > N || sharp.has(k)) return; sharp.add(k);
+    const img = sheets[k - 1].firstChild, full = meta.pages[k - 1];
+    if (img.src.endsWith(full)) return;
+    const pre = new Image(); pre.decoding = 'async'; pre.src = full;
+    (pre.decode ? pre.decode() : Promise.resolve()).then(() => { img.src = full; }, () => { img.src = full; });
+  };
   let cur = 0;
   const setCur = (k) => {
     if (k === cur) return; cur = k;
+    for (const d of [0, 1, -1, 2, 3]) upgrade(k + d);
     const sec = secOf(k);
     crumb.replaceChildren(h('a', { href: href.book(bookId) }, meta.shortTitle), sec ? ` › ${sec.title}` : '');
     pageNo.textContent = `صفحة ${k} من ${N}`;
