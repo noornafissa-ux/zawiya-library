@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=feed82abb8';
-import * as data from './data.js?v=feed82abb8';
-import * as store from './store.js?v=feed82abb8';
-import { search, queryWords } from './search.js?v=feed82abb8';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=0913d8e0a1';
+import * as data from './data.js?v=0913d8e0a1';
+import * as store from './store.js?v=0913d8e0a1';
+import { search, queryWords } from './search.js?v=0913d8e0a1';
 
 const href = {
   library: () => '/',
@@ -132,15 +132,17 @@ export async function libraryView() {
       h('nav', { class: 'hero-chips', 'aria-label': 'أقسام المكتبة' },
         shelves.map((sh) => h('a', { href: `#shelf-${sh.id}`, onclick: go(sh.id) }, sh.title, h('small', null, String(sh.list.length || sh.links.length)))))));
   const blocks = shelves.map((sh) => h('section', { class: 'shelf', id: `shelf-${sh.id}`, 'aria-label': sh.title },
-    h('header', { class: 'shelf-head' },
+    sh.compact ? null : h('header', { class: 'shelf-head' },
       h('span', { class: 'sh-line', 'aria-hidden': 'true' }),
       h('h2', null, sh.title),
       h('span', { class: 'sh-line', 'aria-hidden': 'true' })),
     sh.subtitle ? h('p', { class: 'shelf-sub' }, sh.subtitle) : null,
     sh.list.length ? h('div', { class: 'shelf-books' }, sh.list.map(tile)) : null,
     sh.links.length ? (sh.compact
-      ? h('div', { class: 'link-icons' }, sh.links.map((l) => h('a', { class: `li-${l.icon || 'link'}`, href: l.url, target: '_blank', rel: 'noopener', title: l.title, 'aria-label': l.title },
-          h('span', { class: 'lc-ico' }, svg(LINK_ICONS[l.icon] || ICONS.external)), h('small', null, l.short || l.title))))
+      ? h('div', { class: 'link-groups' }, [...new Set(sh.links.map((l) => l.group || sh.title))].map((g) => h('div', { class: 'link-group-c' },
+          h('h3', null, g),
+          h('div', { class: 'link-icons' }, sh.links.filter((l) => (l.group || sh.title) === g).map((l) => h('a', { class: `li-${l.icon || 'link'}`, href: l.url, target: '_blank', rel: 'noopener', title: l.title, 'aria-label': l.title },
+            h('span', { class: 'lc-ico' }, svg(LINK_ICONS[l.icon] || ICONS.external)), h('small', null, l.short || l.title)))))))
       : h('div', { class: 'link-cards' }, sh.links.map(linkCard))) : null));
   const view = h('div', { class: 'home' }, hero,
     page('wide home-page', last ? continueCard(last, lib) : null, ...blocks,

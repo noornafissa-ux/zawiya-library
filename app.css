@@ -523,3 +523,8 @@ canvas.page-img { display: block; width: 100%; height: auto; background: #fff; m
 .link-icons a:hover .lc-ico { transform: translateY(-2px); }
 .link-icons small { font-size: .74rem; color: var(--muted); white-space: nowrap; }
 .li-telegram .lc-ico { background: #229ed9; } .li-apple .lc-ico { background: #111; } .li-android .lc-ico { background: #2e9e5b; }
+
+.link-groups { display: flex; justify-content: center; flex-wrap: wrap; gap: 18px 10px; border-top: 1px solid var(--line); padding-top: 18px; }
+.link-group-c { display: grid; justify-items: center; gap: 10px; flex: 1 1 150px; max-width: 260px; }
+.link-group-c h3 { margin: 0; font-family: var(--kufi); font-size: 1rem; font-weight: 700; color: var(--emerald); white-space: nowrap; }
+.link-group-c .link-icons { gap: 10px 18px; }
