@@ -585,3 +585,7 @@ canvas.page-img { display: block; width: 100%; height: auto; background: #fff; m
 .zoom-wrap::-webkit-scrollbar { display: none; }
 .zoom-wrap .page-stack { max-width: none; }
 .zoom-wrap.zoomed .page-sheet { box-shadow: none; }
+
+/* موضع نتيجة البحث */
+.flash { animation: flash 2.6s ease-out 1; border-radius: 8px; }
+@keyframes flash { 0%, 35% { background: color-mix(in srgb, var(--gold) 28%, transparent); } 100% { background: transparent; } }

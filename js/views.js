@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=b39297d013';
-import * as data from './data.js?v=b39297d013';
-import * as store from './store.js?v=b39297d013';
-import { search, queryWords } from './search.js?v=b39297d013';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=f4ecdf578c';
+import * as data from './data.js?v=f4ecdf578c';
+import * as store from './store.js?v=f4ecdf578c';
+import { search, queryWords } from './search.js?v=f4ecdf578c';
 
 const href = {
   library: () => '/',
@@ -129,7 +129,7 @@ export async function libraryView() {
     h('div', { class: 'hero-in' },
       siteLogo(),
       h('p', { class: 'hero-tag' }, 'دواوين ومدائح وأوراد للقراءة والسماع'),
-      h('a', { class: 'hero-search', href: '/search' }, svg(ICONS.search), h('span', null, 'ابحث في قصائد ديوان النفحات الشاذلية…'))));
+      h('a', { class: 'hero-search', href: '/search' }, svg(ICONS.search), h('span', null, 'ابحث في الديوان والبردة والهمزية والدردير…'))));
   const blocks = shelves.map((sh) => h('section', { class: 'shelf', id: `shelf-${sh.id}`, 'aria-label': sh.title },
     sh.compact ? null : h('header', { class: 'shelf-head' },
       h('span', { class: 'sh-line', 'aria-hidden': 'true' }),
@@ -324,8 +324,8 @@ function proseView(meta) {
     if (s.title) sec.append(h('div', { class: 'pr-head' },
       h('span', { class: 'pr-wing', 'aria-hidden': 'true' }, '❧'), h('h2', null, s.title), h('span', { class: 'pr-wing r', 'aria-hidden': 'true' }, '❧')));
     if (s.kind === 'closing') sec.append(h('div', { class: 'q-ch-orn', 'aria-hidden': 'true' }, '❁ ✦ ❁'));
-    s.paras.forEach((p) => {
-      const para = h('p', { class: 'pr-p' });
+    s.paras.forEach((p, pi) => {
+      const para = h('p', { class: 'pr-p', id: `p-${i}-${pi}` });
       p.forEach((it, k) => { if (k) para.append(h('span', { class: 'pr-orn', 'aria-hidden': 'true' }, ' ۞ ')); para.append(proseText(it)); });
       sec.append(para);
     });
@@ -353,6 +353,8 @@ function proseView(meta) {
   view._after = () => {
     justifyKashida(body);
     document.fonts?.load?.('20px "Scheherazade New"', 'بسم').then(() => document.fonts.ready).then(() => body.isConnected && justifyKashida(body));
+    const m = location.hash.match(/^#((?:s|p)-[\d-]+)$/);
+    if (m) flashTo(m[1]);
   };
   let tm;
   view._scroll = () => { clearTimeout(tm); tm = setTimeout(() => {
@@ -368,6 +370,11 @@ function proseView(meta) {
   return view;
 }
 
+// الانتقال إلى موضع نتيجة البحث وإبرازه لحظة
+function flashTo(id) {
+  const go = () => { const el = document.getElementById(id); if (!el) return; el.scrollIntoView({ block: 'center' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); };
+  go(); setTimeout(() => { const el = document.getElementById(id); el && el.scrollIntoView({ block: 'center' }); }, 600);
+}
 function qasidaView(meta) {
   document.title = meta.shortTitle;
   const starts = new Map(meta.chapters.map((c, i) => [c.from, i]));
@@ -424,7 +431,7 @@ function qasidaView(meta) {
       document.fonts.load('20px "Scheherazade New"', 'بسم').then(() => document.fonts.ready).then(() => { done = true; clearTimeout(t); if (body.isConnected) layoutPoem(body); });
     }
     const m = location.hash.match(/^#(ch-\d+|v-\d+)$/);
-    if (m) document.getElementById(m[1])?.scrollIntoView({ block: 'start' });
+    if (m) flashTo(m[1]);
   };
   // آخر قراءة: الفصل الظاهر على الشاشة
   let tm;
@@ -1121,11 +1128,11 @@ export async function searchView(params) {
   document.title = 'البحث — مكتبة الزاوية التمسّكية';
   const q0 = params.get('q') || '';
   let scope = params.get('in') || 'all';
-  const input = h('input', { type: 'search', id: 'q', name: 'q', value: q0, placeholder: 'ابحث في الديوان… مثل: المحبة', autocomplete: 'off', enterkeyhint: 'search', 'aria-label': 'كلمات البحث' });
+  const input = h('input', { type: 'search', id: 'q', name: 'q', value: q0, placeholder: 'ابحث عن كلمة أو عبارة… مثل: المحبة', autocomplete: 'off', enterkeyhint: 'search', 'aria-label': 'كلمات البحث' });
   const out = h('div', { class: 'results', 'aria-live': 'polite' });
-  lib = { ...lib, books: lib.books.filter((b) => !b.type) };   // كتب الصفحات المصوّرة لا نص فيها للبحث
+  lib = { ...lib, books: lib.books.filter((b) => b.type !== 'pages') };   // كتب الصفحات المصوّرة لا نص فيها للبحث
   const chips = lib.books.length > 1 ? h('div', { class: 'chips', role: 'group', 'aria-label': 'نطاق البحث' },
-    [{ id: 'all', shortTitle: 'كل الدواوين' }, ...lib.books].map((b) => h('button', { type: 'button', class: 'chip', 'aria-pressed': String(scope === b.id), onclick: (e) => {
+    [{ id: 'all', shortTitle: 'الكل' }, ...lib.books].map((b) => h('button', { type: 'button', class: 'chip', 'aria-pressed': String(scope === b.id), onclick: (e) => {
       scope = b.id; chips.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c === e.currentTarget))); run();
     } }, b.shortTitle))) : null;
   const books = () => (scope === 'all' ? lib.books.map((b) => b.id) : [scope]);
@@ -1136,7 +1143,7 @@ export async function searchView(params) {
     const q = input.value.trim();
     const my = ++token;
     setUrlQuietly(href.search(q));
-    if (!q) { out.replaceChildren(h('div', { class: 'empty' }, h('div', { class: 'big' }, 'البحث في ديوان النفحات الشاذلية'), h('div', null, 'يشمل نصوص قصائد الديوان وعناوينها فقط، ولا يشمل الكتب الأخرى.'), h('div', null, 'يتجاهل البحث التشكيل والمدّ، فكلمة «المحبة» تطابق «المحبّة» و«المحبه».'))); return; }
+    if (!q) { out.replaceChildren(h('div', { class: 'empty' }, h('div', { class: 'big' }, 'البحث في نصوص المكتبة'), h('div', null, 'يشمل ديوان النفحات الشاذلية والبردة والهمزية وصلوات الدردير، ولا يشمل الكتب المصوّرة.'), h('div', null, 'يتجاهل البحث التشكيل والمدّ، فكلمة «المحبة» تطابق «المحبّة» و«المحبه».'))); return; }
     out.replaceChildren(h('div', { class: 'loading' }, 'جارٍ البحث…'));
     let res;
     try { res = await search(q, books()); } catch { if (my === token) out.replaceChildren(h('div', { class: 'empty' }, 'تعذّر تحميل فهرس البحث. تحقق من الاتصال.')); return; }
@@ -1144,12 +1151,12 @@ export async function searchView(params) {
     const { words, results } = res;
     if (!words.length) { out.replaceChildren(h('div', { class: 'empty' }, 'اكتب كلمة من حرفين أو أكثر.')); return; }
     if (!results.length) { out.replaceChildren(h('div', { class: 'empty' }, h('div', { class: 'big' }, `لا توجد نتائج لـ «${q}»`), h('div', null, 'جرّب كلمة أقصر أو صيغة أخرى.'))); return; }
-    const frag = [h('div', { class: 'result-count' }, results.length === 1 ? 'قصيدة واحدة' : `${results.length} ${results.length <= 10 ? 'قصائد' : 'قصيدة'}`)];
+    const frag = [h('div', { class: 'result-count' }, results.length === 1 ? 'نتيجة واحدة' : `${results.length} ${results.length <= 10 ? 'نتائج' : 'نتيجة'}`)];
     for (const r of results.slice(0, 200)) {
-      frag.push(h('a', { class: 'result', href: href.poem(r.book, r.id, q) },
-        h('div', { class: 'top' }, h('span', { class: 't' }, highlight(r.title, words).node), h('span', { class: 'src' }, `${titles[r.book]} · ${r.author}`)),
+      frag.push(h('a', { class: 'result', href: r.at ? `${href.book(r.book)}#${r.at}` : href.poem(r.book, r.id, q) },
+        h('div', { class: 'top' }, h('span', { class: 't' }, highlight(r.title, words).node), h('span', { class: 'src' }, r.author ? `${titles[r.book]} · ${r.author}` : titles[r.book])),
         r.hits.map((x) => h('div', { class: 'snip' }, highlight(x.text, words).node)),
-        r.total > r.hits.length ? h('div', { class: 'more' }, `و${r.total - r.hits.length} مواضع أخرى في القصيدة`) : null));
+        r.total > r.hits.length ? h('div', { class: 'more' }, `و${r.total - r.hits.length} مواضع أخرى${r.at ? '' : ' في القصيدة'}`) : null));
     }
     out.replaceChildren(...frag);
   }
