@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=d5ffb83b6e';
-import * as data from './data.js?v=d5ffb83b6e';
-import * as store from './store.js?v=d5ffb83b6e';
-import { search, queryWords } from './search.js?v=d5ffb83b6e';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=481f1eb216';
+import * as data from './data.js?v=481f1eb216';
+import * as store from './store.js?v=481f1eb216';
+import { search, queryWords } from './search.js?v=481f1eb216';
 
 const href = {
   library: () => '/',
@@ -123,6 +123,7 @@ export async function libraryView() {
   const byId = Object.fromEntries(lib.books.map((b) => [b.id, b]));
   const shelves = (lib.shelves && lib.shelves.length ? lib.shelves : [{ id: 'all', title: lib.title, books: lib.books.map((b) => b.id) }])
     .map((sh) => ({ ...sh, list: (sh.books || []).map((id) => byId[id]).filter(Boolean), links: sh.links || [] })).filter((sh) => sh.list.length || sh.links.length);
+  const groupsOf = (sh) => [...new Set(sh.links.map((l) => l.group || sh.title))];
   const go = (id) => (e) => { e.preventDefault(); document.getElementById(`shelf-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   const hero = h('header', { class: 'home-hero' },
     h('div', { class: 'hero-in' },
@@ -130,7 +131,8 @@ export async function libraryView() {
       h('p', { class: 'hero-tag' }, 'دواوين ومدائح وأوراد للقراءة والسماع'),
       h('a', { class: 'hero-search', href: '/search' }, svg(ICONS.search), h('span', null, 'ابحث عن قصيدة أو بيت…')),
       h('nav', { class: 'hero-chips', 'aria-label': 'أقسام المكتبة' },
-        shelves.map((sh) => h('a', { href: `#shelf-${sh.id}`, onclick: go(sh.id) }, sh.title, h('small', null, String(sh.list.length || sh.links.length)))))));
+        shelves.flatMap((sh) => (sh.compact && sh.links.length ? groupsOf(sh).map((g, i) => [`${sh.id}-g${i}`, g, sh.links.filter((l) => (l.group || sh.title) === g).length]) : [[sh.id, sh.title, sh.list.length || sh.links.length]])
+          .map(([id, t, c]) => h('a', { href: `#shelf-${id}`, onclick: go(id) }, t, h('small', null, String(c))))))));
   const blocks = shelves.map((sh) => h('section', { class: 'shelf', id: `shelf-${sh.id}`, 'aria-label': sh.title },
     sh.compact ? null : h('header', { class: 'shelf-head' },
       h('span', { class: 'sh-line', 'aria-hidden': 'true' }),
@@ -139,7 +141,7 @@ export async function libraryView() {
     sh.subtitle ? h('p', { class: 'shelf-sub' }, sh.subtitle) : null,
     sh.list.length ? h('div', { class: 'shelf-books' }, sh.list.map(tile)) : null,
     sh.links.length ? (sh.compact
-      ? h('div', { class: 'link-groups' }, [...new Set(sh.links.map((l) => l.group || sh.title))].map((g) => h('div', { class: 'link-group-c' },
+      ? h('div', { class: 'link-groups' }, groupsOf(sh).map((g, i) => h('div', { class: 'link-group-c', id: `shelf-${sh.id}-g${i}` },
           h('h3', null, g),
           h('div', { class: 'link-icons' }, sh.links.filter((l) => (l.group || sh.title) === g).map((l) => h('a', { class: `li-${l.icon || 'link'}`, href: l.url, target: '_blank', rel: 'noopener', title: l.title, 'aria-label': l.title },
             h('span', { class: 'lc-ico' }, svg(LINK_ICONS[l.icon] || ICONS.external)), h('small', null, l.short || l.title)))))))
