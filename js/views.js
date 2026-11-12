@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=0af5836f62';
-import * as data from './data.js?v=0af5836f62';
-import * as store from './store.js?v=0af5836f62';
-import { search, queryWords } from './search.js?v=0af5836f62';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=feed82abb8';
+import * as data from './data.js?v=feed82abb8';
+import * as store from './store.js?v=feed82abb8';
+import { search, queryWords } from './search.js?v=feed82abb8';
 
 const href = {
   library: () => '/',
@@ -138,7 +138,10 @@ export async function libraryView() {
       h('span', { class: 'sh-line', 'aria-hidden': 'true' })),
     sh.subtitle ? h('p', { class: 'shelf-sub' }, sh.subtitle) : null,
     sh.list.length ? h('div', { class: 'shelf-books' }, sh.list.map(tile)) : null,
-    sh.links.length ? h('div', { class: 'link-cards' }, sh.links.map(linkCard)) : null));
+    sh.links.length ? (sh.compact
+      ? h('div', { class: 'link-icons' }, sh.links.map((l) => h('a', { class: `li-${l.icon || 'link'}`, href: l.url, target: '_blank', rel: 'noopener', title: l.title, 'aria-label': l.title },
+          h('span', { class: 'lc-ico' }, svg(LINK_ICONS[l.icon] || ICONS.external)), h('small', null, l.short || l.title))))
+      : h('div', { class: 'link-cards' }, sh.links.map(linkCard))) : null));
   const view = h('div', { class: 'home' }, hero,
     page('wide home-page', last ? continueCard(last, lib) : null, ...blocks,
       h('footer', { class: 'home-foot' }, ornament(), h('p', null, 'مكتبة الزاوية التمسّكية'))));

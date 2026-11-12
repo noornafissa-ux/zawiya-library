@@ -515,3 +515,11 @@ canvas.page-img { display: block; width: 100%; height: auto; background: #fff; m
 .lc-txt small { color: var(--muted); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lc-go svg { width: 18px; height: 18px; color: var(--gold); }
 .lc-txt small { text-align: right; }
+
+/* روابط مصغّرة في سطر واحد */
+.link-icons { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px 22px; }
+.link-icons a { display: grid; justify-items: center; gap: 5px; color: var(--ink); text-decoration: none; width: 64px; }
+.link-icons .lc-ico { width: 46px; height: 46px; border-radius: 14px; box-shadow: 0 6px 14px -8px rgb(0 0 0 / 45%); transition: transform .15s ease; }
+.link-icons a:hover .lc-ico { transform: translateY(-2px); }
+.link-icons small { font-size: .74rem; color: var(--muted); white-space: nowrap; }
+.li-telegram .lc-ico { background: #229ed9; } .li-apple .lc-ico { background: #111; } .li-android .lc-ico { background: #2e9e5b; }
