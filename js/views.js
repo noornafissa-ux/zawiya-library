@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=d1f08263d6';
-import * as data from './data.js?v=d1f08263d6';
-import * as store from './store.js?v=d1f08263d6';
-import { search, queryWords } from './search.js?v=d1f08263d6';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=40d5869b05';
+import * as data from './data.js?v=40d5869b05';
+import * as store from './store.js?v=40d5869b05';
+import { search, queryWords } from './search.js?v=40d5869b05';
 
 const href = {
   library: () => '/',
@@ -544,13 +544,14 @@ function attachToc(view, heading, getItems) {
 }
 
 // تكبير الصفحات بإصبعين (أو بنقرتين متتاليتين) مع التحريك يمينًا ويسارًا
-function attachZoom(wrap, stack) {
+function attachZoom(wrap, stack, onZoom) {
   let z = 1, g = null, lastTap = 0, raf = 0;
   const apply = (nz, mx, my) => {        // mx,my: موضع الإصبعين على الشاشة — تبقى النقطة نفسها تحتهما
     nz = Math.min(4, Math.max(1, nz));
     const r = wrap.getBoundingClientRect();
     const px = (wrap.scrollLeft + mx - r.left) / z, py = (my - r.top) / z;
     z = nz; stack.style.width = z === 1 ? '' : `${z * 100}%`;
+    onZoom && onZoom(z);
     wrap.classList.toggle('zoomed', z > 1);
     wrap.scrollLeft = px * z - (mx - r.left);
     const top = wrap.getBoundingClientRect().top + scrollY;
@@ -603,13 +604,18 @@ export async function pageView(bookId, nStr) {
     sheets.push(fig); stack.append(fig);
   }
   // الصفحة الكاملة الجودة تُجلب مسبقًا لما حولك (نسخة خفيفة تظهر أولًا ريثما تصل)
-  const sharp = new Set();
+  // ثلاث درجات: نسخة خفيفة فورية ← نسخة الهاتف (واضحة تمامًا على شاشته) ← الأصلية عند التكبير أو في الشاشات الكبيرة
+  const level = new Array(N + 1).fill(0);
+  let zoomed = false;
+  const needFull = () => zoomed || !meta.mids || (stack.clientWidth || innerWidth) * (devicePixelRatio || 1) > 1300;
   const upgrade = (k) => {
-    if (k < 1 || k > N || sharp.has(k)) return; sharp.add(k);
-    const img = sheets[k - 1].firstChild, full = meta.pages[k - 1];
-    if (img.src.endsWith(full)) return;
-    const pre = new Image(); pre.decoding = 'async'; pre.src = full;
-    (pre.decode ? pre.decode() : Promise.resolve()).then(() => { img.src = full; }, () => { img.src = full; });
+    if (k < 1 || k > N) return;
+    const want = needFull() ? 2 : 1;
+    if (level[k] >= want) return; level[k] = want;
+    const img = sheets[k - 1].firstChild, url = want === 2 ? meta.pages[k - 1] : meta.mids[k - 1];
+    if (img.src.endsWith(url)) return;
+    const pre = new Image(); pre.decoding = 'async'; pre.src = url;
+    (pre.decode ? pre.decode() : Promise.resolve()).then(() => { if (level[k] === want || want === 2) img.src = url; }, () => { img.src = url; });
   };
   // كل صفحة تقترب من الشاشة تُستبدل نسختها الخفيفة بالجودة الكاملة، ولو مرّت سريعًا
   if ('IntersectionObserver' in window) {
@@ -635,7 +641,9 @@ export async function pageView(bookId, nStr) {
   };
   const goTo = (k, smooth) => document.getElementById(`pg-${k}`)?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
   const wrap = h('div', { class: 'zoom-wrap', dir: 'ltr' }, stack);
-  attachZoom(wrap, stack);
+  attachZoom(wrap, stack, (z) => {   // عند التكبير تُجلب الصفحات الظاهرة بدقتها الأصلية
+    if (z > 1.15 && !zoomed) { zoomed = true; for (const d of [0, 1, -1]) upgrade(cur + d); }
+  });
   const view = h('div', { class: 'reader pages-reader' }, tools, h('div', { class: 'page' }, wrap));
   view._after = () => { if (n > 1) { goTo(n); setTimeout(() => goTo(n), 400); } };
   view._scroll = () => setCur(visible());
