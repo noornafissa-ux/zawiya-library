@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=e2c97a9164';
-import * as data from './data.js?v=e2c97a9164';
-import * as store from './store.js?v=e2c97a9164';
-import { search, queryWords } from './search.js?v=e2c97a9164';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=3238d2b5cc';
+import * as data from './data.js?v=3238d2b5cc';
+import * as store from './store.js?v=3238d2b5cc';
+import { search, queryWords } from './search.js?v=3238d2b5cc';
 
 const href = {
   library: () => '/',
@@ -642,7 +642,7 @@ export async function pageView(bookId, nStr) {
   view._keys = (e) => { if (e.key === 'ArrowLeft') goTo(Math.min(N, cur + 1), true); if (e.key === 'ArrowRight') goTo(Math.max(1, cur - 1), true); };
   if (meta.toc && meta.toc.length) attachToc(view, 'الفهرس', () => {
     const c = [...meta.toc].map((t, i) => [t, i]).reverse().find(([t]) => t.page <= cur);
-    return meta.toc.map((t, i) => ({ title: t.title, sub: `صفحة ${t.page}`, target: `pg-${t.page}`, current: c && c[1] === i }));
+    return meta.toc.map((t, i) => ({ title: t.title, sub: t.sub ? `${t.sub} · صفحة ${t.page}` : `صفحة ${t.page}`, target: `pg-${t.page}`, current: c && c[1] === i }));
   });
   return view;
 }
