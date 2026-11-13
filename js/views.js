@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=f4ecdf578c';
-import * as data from './data.js?v=f4ecdf578c';
-import * as store from './store.js?v=f4ecdf578c';
-import { search, queryWords } from './search.js?v=f4ecdf578c';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=11e54b3e64';
+import * as data from './data.js?v=11e54b3e64';
+import * as store from './store.js?v=11e54b3e64';
+import { search, queryWords } from './search.js?v=11e54b3e64';
 
 const href = {
   library: () => '/',
@@ -169,7 +169,12 @@ function continueCard(last, lib) {
 export async function bookView(bookId, focusPoem) {
   let meta;
   try { meta = await data.book(bookId); } catch { return notFound('هذا الديوان غير موجود في المكتبة.'); }
-  if (meta.type === 'pages') return pagesBookView(meta);
+  if (meta.type === 'pages') {   // الكتب المصوّرة تُفتح مباشرة على القراءة (آخر صفحة مقروءة أو الأولى)
+    const last = store.lastRead();
+    const k = last && last.b === bookId && last.kind === 'page' ? last.n : 1;
+    setUrlQuietly(href.page(bookId, k));
+    return pageView(bookId, String(k));
+  }
   if (meta.type === 'qasida') return qasidaView(meta);
   if (meta.type === 'prose') return proseView(meta);
   document.title = meta.shortTitle;
@@ -582,9 +587,11 @@ export async function pageView(bookId, nStr) {
   const crumb = h('div', { class: 'crumb' });
   const pageNo = h('span', { class: 'page-no' });
   const tools = h('div', { class: 'reader-tools' },
-    backIcon(href.book(bookId)),
-    h('a', { class: 'icon-btn', href: href.book(bookId), 'aria-label': 'صفحة الكتاب', title: 'صفحة الكتاب' }, svg(ICONS.list)),
-    crumb, pageNo);
+    backIcon('/'),
+    h('a', { class: 'icon-btn', href: '/', 'aria-label': 'المكتبة', title: 'المكتبة' }, svg(ICONS.library)),
+    crumb, pageNo,
+    h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'حفظ الكتاب على الجهاز', title: 'حفظ الكتاب على الجهاز للقراءة دون إنترنت',
+      onclick: (e) => saveBookQuiet(meta, e.currentTarget) }, svg(ICONS.download)));
   // القراءة متصلة: كل الصفحات تحت بعضها، تُحمَّل صورها عند الاقتراب منها
   const sheets = [];
   const stack = h('div', { class: 'page-stack' });
@@ -614,7 +621,7 @@ export async function pageView(bookId, nStr) {
     if (k === cur) return; cur = k;
     for (const d of [0, 1, -1, 2, 3]) upgrade(k + d);
     const sec = secOf(k);
-    crumb.replaceChildren(h('a', { href: href.book(bookId) }, meta.shortTitle), sec ? ` › ${sec.title}` : '');
+    crumb.replaceChildren(meta.shortTitle, sec ? ` › ${sec.title}` : '');
     pageNo.textContent = `صفحة ${k} من ${N}`;
     document.title = `${meta.shortTitle} — صفحة ${k}`;
     setUrlQuietly(href.page(bookId, k));
@@ -640,6 +647,22 @@ export async function pageView(bookId, nStr) {
   return view;
 }
 
+// حفظ كتاب مصوّر على الجهاز من شريط القراءة (التقدّم يظهر في رسالة قصيرة)
+async function saveBookQuiet(meta, btn) {
+  if (btn.disabled) return; btn.disabled = true;
+  const urls = [...meta.pages]; let done = 0;
+  toast('جارٍ حفظ الكتاب على الجهاز…');
+  try {
+    for (let i = 0; i < urls.length; i += 8) {
+      await Promise.all(urls.slice(i, i + 8).map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(u); })));
+      done = Math.min(urls.length, i + 8);
+      if (done % 40 < 8 && done < urls.length) toast(`جارٍ الحفظ… ${Math.round((done / urls.length) * 100)}%`);
+    }
+    store.markOffline(meta.id, meta.contentVersion);
+    toast('حُفظ الكتاب، ويمكن قراءته الآن دون إنترنت ✓');
+  } catch { toast('تعذّر حفظ الكتاب. تأكد من الاتصال ثم أعد المحاولة.'); }
+  btn.disabled = false;
+}
 async function saveOffline(meta, btn) {
   btn.disabled = true;
   const vv = (u) => (window.__V ? `${u}?v=${window.__V}` : u);
