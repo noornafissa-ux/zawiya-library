@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=3cb50501d1';
-import * as data from './data.js?v=3cb50501d1';
-import * as store from './store.js?v=3cb50501d1';
-import { search, queryWords } from './search.js?v=3cb50501d1';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=0d8a6a5a1c';
+import * as data from './data.js?v=0d8a6a5a1c';
+import * as store from './store.js?v=0d8a6a5a1c';
+import { search, queryWords } from './search.js?v=0d8a6a5a1c';
 
 const href = {
   library: () => '/',
@@ -941,6 +941,7 @@ function kashidaSlots(text) {
     while (j < text.length && MARK.test(text[j])) j++;
     const next = text[j];
     if (!next || !LETTER.test(next)) continue;
+    if (next === 'ء') continue;                                           // الهمزة المفردة لا تتّصل بما قبلها: المدّ قبلها يشوّه الكلمة (شَيْءٌ)
     if (ALEFS.has(next)) continue;                                        // لا مدّ قبل الألف: يميل الألف في خط أميري (ولا تُكسر «لا»)
     if (ch === 'ل' && next === 'ل') continue;                             // ولا «الله/لله»
     if (ch === 'ل' && i > 0 && text.slice(Math.max(0, i - 3), i).replace(/[\u064B-\u0652\u0670]/g, '').endsWith('ل')) continue;
@@ -1057,7 +1058,8 @@ function stretchText(base, orig, colw, w, tw, measure) {
   const slots = [...words.map((ws) => ws[ws.length - 1]), ...words.flatMap((ws) => ws.slice(0, -1).reverse())];
   const per = new Array(slots.length).fill(0);
   let k = 0, guard = 0;
-  while (n > 0 && guard++ < 20000) { per[k]++; n--; k = (k + 1) % slots.length; }   // كالمطبوع: يُملأ الشطر كله بالمدّ
+  if (slots.length <= 2) n = Math.min(n, 8 * slots.length);   // شطر بموضع مدّ واحد أو اثنين: لا مدّ مفرط الطول؛ ما زاد يبقى فراغًا يُحاذى فيه الشطر
+  while (n > 0 && guard++ < 20000) { per[k]++; n--; k = (k + 1) % slots.length; }   // كالمطبوع: يُملأ الشطر بالمدّ
   const ins = slots.map((pos, i) => [pos, per[i]]).filter((x) => x[1]).sort((a, b) => b[0] - a[0]);
   let out = base;
   for (const [pos, c] of ins) out = out.slice(0, pos) + 'ـ'.repeat(c) + out.slice(pos);
