@@ -8,7 +8,6 @@ khamriya-2 https://archive.org/download/zawiya-recordings/khamriya-2.mp3
 khamriya-8 https://archive.org/download/zawiya-recordings/khamriya-7.mp3
 khamriya-16 https://archive.org/download/zawiya-recordings/khamriya-15.mp3
 khamriya-20 https://archive.org/download/zawiya-recordings/khamriya-19.mp3
-khamriya-31 https://archive.org/download/zawiya-recordings/%D8%A3khamriya-30.mp3
 irshadiya-19 https://archive.org/download/zawiya-recordings/irshadiya-19.mp3
 khamriya-3 https://archive.org/download/zawiya-recordings/khamriya-3.mp3
 khamriya-67 https://archive.org/download/zawiya-recordings/khamriya-67.mp3
@@ -20,3 +19,4 @@ khamriya-37 https://archive.org/download/zawiya-recordings/khamriya-37.mp3
 khamriya-42 https://archive.org/download/zawiya-recordings/khamriya-42.mp3
 khamriya-45 https://archive.org/download/zawiya-recordings/khamriya-45.mp3
 khamriya-62 https://archive.org/download/zawiya-recordings/khamriya-62.mp3
+khamriya-30 https://archive.org/download/zawiya-recordings/khamriya-30.mp3
