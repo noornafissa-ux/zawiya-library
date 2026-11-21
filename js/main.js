@@ -1,8 +1,8 @@
 // نقطة البدء: التوجيه، القائمة، الإعدادات، عامل الخدمة
-import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=286cb16684';
-import * as store from './store.js?v=286cb16684';
-import * as data from './data.js?v=286cb16684';
-import * as V from './views.js?v=286cb16684';
+import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=9208e92aa0';
+import * as store from './store.js?v=9208e92aa0';
+import * as data from './data.js?v=9208e92aa0';
+import * as V from './views.js?v=9208e92aa0';
 
 const main = document.getElementById('main');
 let current = null;
@@ -105,12 +105,13 @@ document.getElementById('install-btn').addEventListener('click', async () => {
 
 // ——— عامل الخدمة (العمل دون اتصال) ———
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  addEventListener('load', async () => {
+  // يُسجَّل بعد اكتمال فتح الصفحة بقليل، حتى لا ينافس تحميلُ ملفات الحفظ ما يراه القارئ أولًا
+  addEventListener('load', () => setTimeout(async () => {
     try {
       const reg = await navigator.serviceWorker.register('sw.js');
       reg.update?.();
     } catch (e) { console.warn('SW', e); }
-  });
+  }, 3000));
 }
 fetch('version.txt').then((r) => (r.ok ? r.text() : '')).then((v) => { if (v) document.getElementById('app-version').textContent = `الإصدار ${v.trim()}`; }).catch(() => {});
 
@@ -144,7 +145,9 @@ for (const ev of ['pointerover', 'touchstart', 'focusin']) {
   document.addEventListener(ev, (e) => { const a = e.target.closest && e.target.closest('a[href]'); if (a) prefetchFor(a); }, { passive: true });
 }
 // بعد فتح المكتبة: تحميل فهارس الكتب في وقت الفراغ حتى تُفتح فورًا
-(window.requestIdleCallback || ((f) => setTimeout(f, 1200)))(() => data.library().then((lib) => lib.books.forEach((b) => data.book(b.id).catch(() => {}))).catch(() => {}));
+// بعد ظهور الصفحة وصورها: تجهيز بيانات الكتب واحدًا بعد الآخر حتى يُفتح أيّها فورًا (دون منافسة ما يراه القارئ)
+const warmBooks = () => data.library().then(async (lib) => { for (const b of lib.books) { try { await data.book(b.id); } catch {} } }).catch(() => {});
+if (document.readyState === 'complete') setTimeout(warmBooks, 2500); else addEventListener('load', () => setTimeout(warmBooks, 2500));
 addEventListener(HASH_MODE ? 'hashchange' : 'popstate', route);
 // رابط قديم بـ # فُتح والموقع مفتوح في التبويب نفسه
 if (!HASH_MODE) addEventListener('hashchange', () => {

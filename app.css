@@ -5,7 +5,7 @@
 @font-face { font-family: "Aref Ruqaa"; src: url(fonts/ArefRuqaa-Bold.woff) format("woff"); font-weight: 700; font-display: swap; }
 @font-face { font-family: "Reem Kufi"; src: url(fonts/ReemKufi.woff) format("woff"); font-weight: 400 700; font-display: swap; }
 @font-face { font-family: "El Messiri"; src: url(fonts/ElMessiri.woff) format("woff"); font-weight: 400 700; font-display: swap; }
-@font-face { font-family: "Scheherazade New"; src: url(fonts/ScheherazadeNew.woff) format("woff"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Scheherazade New"; src: url(fonts/ScheherazadeNew-sub.woff) format("woff"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Noto Naskh Arabic"; src: url(fonts/NotoNaskhArabic.woff) format("woff"); font-weight: 400 700; font-display: swap; }
 
 :root {
