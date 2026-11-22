@@ -1,6 +1,6 @@
 // البحث في الدواوين — يعمل بالكامل في المتصفح، ويشمل كل ديوان مذكور في المكتبة.
-import { normalize } from './util.js?v=9208e92aa0';
-import * as data from './data.js?v=9208e92aa0';
+import { normalize } from './util.js?v=0af9a1f0fc';
+import * as data from './data.js?v=0af9a1f0fc';
 
 const prepared = new Map(); // bookId -> [{id,title,author,lines,nTitle,nLines,nAll}]
 
