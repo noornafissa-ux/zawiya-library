@@ -1,8 +1,8 @@
 // نقطة البدء: التوجيه، القائمة، الإعدادات، عامل الخدمة
-import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=1264bf5e39';
-import * as store from './store.js?v=1264bf5e39';
-import * as data from './data.js?v=1264bf5e39';
-import * as V from './views.js?v=1264bf5e39';
+import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=c6c974eada';
+import * as store from './store.js?v=c6c974eada';
+import * as data from './data.js?v=c6c974eada';
+import * as V from './views.js?v=c6c974eada';
 
 const main = document.getElementById('main');
 let current = null;

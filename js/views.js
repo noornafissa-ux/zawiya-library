@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=1264bf5e39';
-import * as data from './data.js?v=1264bf5e39';
-import * as store from './store.js?v=1264bf5e39';
-import { search, queryWords } from './search.js?v=1264bf5e39';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=c6c974eada';
+import * as data from './data.js?v=c6c974eada';
+import * as store from './store.js?v=c6c974eada';
+import { search, queryWords } from './search.js?v=c6c974eada';
 
 const href = {
   library: () => '/',
@@ -275,9 +275,22 @@ function proseText(t) {
   return frag;
 }
 /** ضبط الأسطر بالمدّ (الكشيدة) كالكتاب المطبوع: كل سطر يمتدّ إلى آخر العرض دون فراغات واسعة بين الكلمات */
+// ضبط الأسطر بالمدّ يتمّ للفقرات القريبة من الشاشة فقط، فيظهر النص فورًا ولا يتأخّر فتح الكتاب
 function justifyKashida(root) {
   if (!root || !root.isConnected) return;
-  root.querySelectorAll('.w[data-t]').forEach((w) => { if (w.textContent !== w.dataset.t) w.textContent = w.dataset.t; });
+  if (root._jio) root._jio.disconnect();
+  root.querySelectorAll('.pr-p').forEach((p) => { delete p.dataset.j; p.querySelectorAll('.w[data-t]').forEach((w) => { if (w.textContent !== w.dataset.t) w.textContent = w.dataset.t; }); });
+  if (!('IntersectionObserver' in window)) { justifyParas(root, [...root.querySelectorAll('.pr-p')]); return; }
+  let queue = new Set(), raf = 0;
+  const io = new IntersectionObserver((es) => {
+    es.forEach((e) => { if (e.isIntersecting && !e.target.dataset.j) { queue.add(e.target); io.unobserve(e.target); } });
+    if (queue.size && !raf) raf = requestAnimationFrame(() => { raf = 0; const ps = [...queue]; queue = new Set(); justifyParas(root, ps); });
+  }, { rootMargin: '150% 0px' });
+  root._jio = io;
+  root.querySelectorAll('.pr-p').forEach((p) => io.observe(p));
+}
+function justifyParas(root, paras) {
+  if (!root.isConnected || !paras.length) return;
   const first = root.querySelector('.w[data-t]'); if (!first) return;
   const ctx = document.createElement('canvas').getContext('2d');
   ctx.font = getComputedStyle(first).font;
@@ -290,7 +303,8 @@ function justifyKashida(root) {
     let out = base; [...cnt.entries()].sort((a, b) => b[0] - a[0]).forEach(([pos, m]) => { out = out.slice(0, pos) + 'ـ'.repeat(m) + out.slice(pos); });
     el.textContent = out;
   };
-  for (const p of root.querySelectorAll('.pr-p')) {
+  for (const p of paras) {
+    p.dataset.j = '1';
     const cs = getComputedStyle(p);
     const r0 = p.getBoundingClientRect();
     const left = r0.left + parseFloat(cs.paddingLeft), right = r0.right - parseFloat(cs.paddingRight);
