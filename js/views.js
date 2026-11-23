@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=c6c974eada';
-import * as data from './data.js?v=c6c974eada';
-import * as store from './store.js?v=c6c974eada';
-import { search, queryWords } from './search.js?v=c6c974eada';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=fb19c39f0e';
+import * as data from './data.js?v=fb19c39f0e';
+import * as store from './store.js?v=fb19c39f0e';
+import { search, queryWords } from './search.js?v=fb19c39f0e';
 
 const href = {
   library: () => '/',
@@ -399,10 +399,13 @@ function qasidaView(meta) {
   const starts = new Map(meta.chapters.map((c, i) => [c.from, i]));
   const notes = meta.notes || {};
   const blk = h('div', { class: 'blk c2' });
+  // الأبيات الأولى تُرسم فورًا، والباقي يُضاف على دفعات في الخلفية (القصائد الطويلة تُفتح بلا انتظار)
+  const groups = [];
   for (const v of meta.verses) {
+    const g = []; groups.push(g);
     if (starts.has(v.n)) {
       const i = starts.get(v.n), c = meta.chapters[i];
-      blk.append(h('div', { class: 'q-ch', id: `ch-${i + 1}` },
+      g.push(h('div', { class: 'q-ch', id: `ch-${i + 1}` },
         h('div', { class: 'q-ch-orn', 'aria-hidden': 'true' }, '❁'),
         h('div', { class: 'q-ch-k' }, `الفصل ${ORD[i] || arNum(i + 1)}`),
         h('h2', { class: 'q-ch-t' }, c.title),
@@ -411,10 +414,38 @@ function qasidaView(meta) {
     const row = h('div', { class: 'row v2', id: `v-${v.n}`, 'data-n': arNum(v.n) });
     v.s.forEach((t, k) => row.append(h('div', { class: 'part', 'data-col': k }, h('span', { class: 'tx', 'data-t': t, 'data-o': t }, t))));
     row.append(h('span', { class: 'vn', 'aria-label': `البيت ${v.n}` }, h('span', null, arNum(v.n)), notes[v.n] ? h('sup', null, '*') : null));
-    blk.append(row);
-    if (notes[v.n]) blk.append(h('p', { class: 'q-note' }, h('b', null, `* البيت ${arNum(v.n)}: `), notes[v.n]));
+    g.push(row);
+    if (notes[v.n]) g.push(h('p', { class: 'q-note' }, h('b', null, `* البيت ${arNum(v.n)}: `), notes[v.n]));
   }
   const body = h('div', { class: 'poem q-poem', lang: 'ar' }, blk);
+  const FIRST = 24;
+  let shown = Math.min(FIRST, groups.length);
+  groups.slice(0, shown).forEach((g) => blk.append(...g));
+  // عرض الأبيات التي لم تُرسم بعد (بالقياس على الأبيات المرسومة) حتى تبقى الأعمدة بعرضها النهائي من البداية
+  blk._natFn = () => {
+    if (shown >= groups.length) return [];
+    const tx = [...blk.querySelectorAll('.row.v2 .tx[data-t]')].slice(0, 40); if (!tx.length) return [];
+    const ctx = document.createElement('canvas').getContext('2d'); ctx.font = getComputedStyle(tx[0]).font;
+    let ratio = 0; tx.forEach((t) => { const c = ctx.measureText(t.dataset.t).width; if (c) ratio = Math.max(ratio, t.getBoundingClientRect().width / c); });
+    if (!ratio) ratio = 1;
+    const out = [];
+    meta.verses.slice(shown).forEach((v) => v.s.forEach((t, k) => { out[k] = Math.max(out[k] || 0, ctx.measureText(t).width * ratio); }));
+    return out;
+  };
+  const appendMore = (count) => {
+    if (shown >= groups.length) return;
+    const next = groups.slice(shown, shown + count); shown += next.length;
+    const frag = document.createDocumentFragment(); next.forEach((g) => frag.append(...g)); blk.append(frag);
+    if (blk._lay) {
+      const rows = next.flat().filter((el) => el.classList && el.classList.contains('row'));
+      rows.forEach((r) => styleRow(r, blk._lay));
+      body.classList.add('measuring');
+      kashida(body, rows.flatMap((r) => [...r.querySelectorAll('.tx[data-t]')]));
+      body.classList.remove('measuring');
+    }
+  };
+  const ensureAll = () => appendMore(groups.length);
+  const pump = () => { if (!body.isConnected || shown >= groups.length) return; appendMore(30); (window.requestIdleCallback || ((f) => setTimeout(f, 30)))(pump); };
   const toc = h('nav', { class: 'q-toc', 'aria-label': 'فصول القصيدة' }, meta.chapters.map((c, i) =>
     h('a', { href: `#ch-${i + 1}`, onclick: (e) => { e.preventDefault(); document.getElementById(`ch-${i + 1}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } },
       h('span', { class: 'k' }, ORD[i] || arNum(i + 1)), h('span', null, c.title))));
@@ -442,16 +473,18 @@ function qasidaView(meta) {
   view._layout = () => layoutPoem(body);
   view._after = () => {
     // التنسيق مرة واحدة بعد تحميل الخط الخاص (وإن تأخّر الخط كثيرًا نُنسّق الآن ثم نعيد عند وصوله)
+    const m = location.hash.match(/^#(ch-\d+|v-\d+)$/);
+    if (m) ensureAll();                                  // رابط إلى بيت بعينه: تُرسم القصيدة كلها أولًا
     const fontOk = () => document.fonts?.check?.('20px "Scheherazade New"', 'بسم');
-    if (!document.fonts?.load || fontOk()) layoutPoem(body);
+    if (!document.fonts?.load || fontOk()) { layoutPoem(body); setTimeout(pump, 60); }
     else {
       let done = false;
-      const t = setTimeout(() => { if (!done) layoutPoem(body); }, 2500);
-      document.fonts.load('20px "Scheherazade New"', 'بسم').then(() => document.fonts.ready).then(() => { done = true; clearTimeout(t); if (body.isConnected) layoutPoem(body); });
+      const t = setTimeout(() => { if (!done) { layoutPoem(body); setTimeout(pump, 60); } }, 2500);
+      document.fonts.load('20px "Scheherazade New"', 'بسم').then(() => document.fonts.ready).then(() => { done = true; clearTimeout(t); if (body.isConnected) { layoutPoem(body); setTimeout(pump, 60); } });
     }
-    const m = location.hash.match(/^#(ch-\d+|v-\d+)$/);
     if (m) flashTo(m[1]);
   };
+  view._ensureAll = ensureAll;
   // آخر قراءة: الفصل الظاهر على الشاشة
   let tm;
   view._scroll = () => { clearTimeout(tm); tm = setTimeout(() => {
@@ -543,7 +576,7 @@ function attachToc(view, heading, getItems) {
     list.replaceChildren(...items.map((it) => {
       const isToday = normDay(it.title).includes(today);
       const row = h('a', { class: `toc-item${it.current ? ' cur' : ''}${isToday ? ' today' : ''}`, href: it.href || `#${it.target}`, role: 'listitem',
-        onclick: (e) => { if (it.target) { e.preventDefault(); close(); document.getElementById(it.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } else close(); } },
+        onclick: (e) => { if (it.target) { e.preventDefault(); close(); view._ensureAll?.(); document.getElementById(it.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } else close(); } },
         h('span', { class: 'ti-t' }, it.title, isToday ? h('em', null, 'ورد اليوم') : null),
         it.sub ? h('small', null, it.sub) : null,
         h('span', { class: 'ti-check', 'aria-hidden': 'true' }, it.current ? '✓' : ''));
@@ -888,6 +921,7 @@ export function layoutPoem(poem) {
       const t = p.querySelector('.tx'); if (!t) return;
       const k = Number(p.dataset.col); nat[k] = Math.max(nat[k] || 0, t.getBoundingClientRect().width);
     });
+    if (b._natFn) b._natFn(nat).forEach((v, k) => { nat[k] = Math.max(nat[k] || 0, v); });   // أبيات لم تُرسم بعد
     const n = Math.max(nat.length, b.dataset.w ? JSON.parse(b.dataset.w).length : 0);
     for (let k = 0; k < n; k++) nat[k] = nat[k] || 0;
     let w = b.dataset.w ? JSON.parse(b.dataset.w) : null, g = b.dataset.g ? JSON.parse(b.dataset.g) : null;
@@ -921,23 +955,26 @@ export function layoutPoem(poem) {
     // على الشاشة الضيقة: الأشطر متدرّجة — الأول يبدأ من اليمين والأخير ينتهي عند اليسار، وما بينهما بالتساوي،
     // وكلها بعرض واحد في القصيدة كلها حتى تتساوى بداياتها ونهاياتها
     const sw = Math.min(avail, Math.max(Math.max(...px), Math.floor(avail * (n === 2 ? 0.62 : n === 3 ? 0.58 : 0.54))));
-    x.b.querySelectorAll('.row.v2, .row.v3').forEach((r) => {
-      r.style.gridTemplateColumns = mode === 'side' ? tpl : 'minmax(0, 1fr)';
-      r.querySelectorAll('.part').forEach((p) => {
-        const k = Number(p.dataset.col);
-        const w = mode === 'side' ? px[k] : sw;
-        p.style.width = `${w}px`;
-        p.style.paddingInline = `${pad}px`;
-        p.dataset.w = w - 2 * pad;
-        if (mode === 'side') p.style.gridColumn = String(2 * k + 1);
-        else { p.style.justifySelf = 'start'; p.style.marginInlineStart = n > 1 ? `${Math.round((avail - sw) * k / (n - 1))}px` : ''; }
-      });
-    });
+    x.b._lay = { mode, tpl, px, sw, pad, n, avail };
+    x.b.querySelectorAll('.row.v2, .row.v3').forEach((r) => styleRow(r, x.b._lay));
   }
   kashida(poem);
   poem.classList.remove('measuring');
 }
 
+function styleRow(r, L) {
+  const { mode, tpl, px, sw, pad, n, avail } = L;
+  r.style.gridTemplateColumns = mode === 'side' ? tpl : 'minmax(0, 1fr)';
+  r.querySelectorAll('.part').forEach((p) => {
+    const k = Number(p.dataset.col);
+    const w = mode === 'side' ? px[k] : sw;
+    p.style.width = `${w}px`;
+    p.style.paddingInline = `${pad}px`;
+    p.dataset.w = w - 2 * pad;
+    if (mode === 'side') p.style.gridColumn = String(2 * k + 1);
+    else { p.style.justifySelf = 'start'; p.style.marginInlineStart = n > 1 ? `${Math.round((avail - sw) * k / (n - 1))}px` : ''; }
+  });
+}
 // ——— الضبط بالمدّ (الكشيدة) كما في الديوان المطبوع ———
 const MARK = /[\u0610-\u061A\u064B-\u065F\u0670]/;
 // حروف تتصل بما بعدها
@@ -974,9 +1011,9 @@ function measureTatweel(el) {  // (غير مستعمل حاليًا)
   }
   return tatweelW;
 }
-function kashida(poem) {
+function kashida(poem, only) {
   // كل القياسات دفعة واحدة ثم كل الكتابات دفعة واحدة (بدل قياس كل شطر بعد تعديله) — أسرع بكثير في القصائد الطويلة
-  const parts = [...poem.querySelectorAll('.row.v2 .tx[data-t], .row.v3 .tx[data-t]')];
+  const parts = only || [...poem.querySelectorAll('.row.v2 .tx[data-t], .row.v3 .tx[data-t]')];
   if (!parts.length) return;
   parts.forEach((t) => { if (t.style.wordSpacing) t.style.wordSpacing = ''; });
   const fs = parseFloat(getComputedStyle(poem).fontSize) || 20;
