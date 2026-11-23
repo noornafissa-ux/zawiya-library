@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=b7874c1058';
-import * as data from './data.js?v=b7874c1058';
-import * as store from './store.js?v=b7874c1058';
-import { search, queryWords } from './search.js?v=b7874c1058';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=5c87c3d7bd';
+import * as data from './data.js?v=5c87c3d7bd';
+import * as store from './store.js?v=5c87c3d7bd';
+import { search, queryWords } from './search.js?v=5c87c3d7bd';
 
 const href = {
   library: () => '/',
@@ -849,6 +849,7 @@ export function layoutPoem(poem) {
   if (!poem || !poem.isConnected) return;
   // إعادة كل شيء إلى حالته الطبيعية قبل القياس
   poem.querySelectorAll('.tx[data-t]').forEach((t) => { if (t.textContent !== t.dataset.t) t.textContent = t.dataset.t; });
+  poem.querySelectorAll('.tx[data-t]').forEach((t) => { t.style.wordSpacing = ''; });
   poem.querySelectorAll('.row.v2, .row.v3').forEach((r) => { r.style.gridTemplateColumns = ''; });
   poem.querySelectorAll('.row.v2 .part, .row.v3 .part').forEach((p) => { p.style.width = ''; p.style.gridColumn = ''; p.style.justifySelf = ''; p.style.paddingInline = ''; p.style.marginInlineStart = ''; p.style.textAlign = ''; p.style.textAlignLast = ''; });
   poem.style.setProperty('--fit', '1');
@@ -963,6 +964,7 @@ function kashida(poem) {
   // كل القياسات دفعة واحدة ثم كل الكتابات دفعة واحدة (بدل قياس كل شطر بعد تعديله) — أسرع بكثير في القصائد الطويلة
   const parts = [...poem.querySelectorAll('.row.v2 .tx[data-t], .row.v3 .tx[data-t]')];
   if (!parts.length) return;
+  parts.forEach((t) => { if (t.style.wordSpacing) t.style.wordSpacing = ''; });
   const fs = parseFloat(getComputedStyle(poem).fontSize) || 20;
   const ctx = document.createElement('canvas').getContext('2d');
   ctx.font = getComputedStyle(parts[0]).font;
@@ -995,6 +997,10 @@ function kashida(poem) {
     // ملاصقًا لجهته (الأول يمينًا، والأخير يسارًا، والأوسط في الوسط)
     const gap = it.colw - w;
     const spaces = (it.t.textContent.trim().match(/ +/g) || []).length;
+    if (spaces && gap > 2) {                         // ما بقي من فراغ يُوزَّع بين الكلمات فيمتلئ الشطر من طرفه إلى طرفه كبقية الأشطر
+      it.t.style.wordSpacing = `${gap / spaces}px`;
+      return;
+    }
     if (gap > fs * 0.35 * Math.max(1, spaces)) {
       const p = it.t.parentElement, row = p.parentElement;
       const cols = row.querySelectorAll('.part').length, k = Number(p.dataset.col);
@@ -1058,7 +1064,7 @@ function stretchText(base, orig, colw, w, tw, measure) {
   const slots = [...words.map((ws) => ws[ws.length - 1]), ...words.flatMap((ws) => ws.slice(0, -1).reverse())];
   const per = new Array(slots.length).fill(0);
   let k = 0, guard = 0;
-  if (slots.length <= 2) n = Math.min(n, 8 * slots.length);   // شطر بموضع مدّ واحد أو اثنين: لا مدّ مفرط الطول؛ ما زاد يبقى فراغًا يُحاذى فيه الشطر
+  if (slots.length <= 2) n = Math.min(n, Math.round(slots.length * colw * 0.15 / tw));   // شطر بموضع مدّ واحد أو اثنين: لا مدّ مفرط الطول؛ ما زاد يبقى فراغًا يُحاذى فيه الشطر
   while (n > 0 && guard++ < 20000) { per[k]++; n--; k = (k + 1) % slots.length; }   // كالمطبوع: يُملأ الشطر بالمدّ
   const ins = slots.map((pos, i) => [pos, per[i]]).filter((x) => x[1]).sort((a, b) => b[0] - a[0]);
   let out = base;
