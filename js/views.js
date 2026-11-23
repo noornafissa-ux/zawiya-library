@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=427d3dca7c';
-import * as data from './data.js?v=427d3dca7c';
-import * as store from './store.js?v=427d3dca7c';
-import { search, queryWords } from './search.js?v=427d3dca7c';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=6c940f4a82';
+import * as data from './data.js?v=6c940f4a82';
+import * as store from './store.js?v=6c940f4a82';
+import { search, queryWords } from './search.js?v=6c940f4a82';
 
 const href = {
   library: () => '/',
@@ -446,7 +446,7 @@ function qasidaView(meta) {
     store.setLastRead({ b: meta.id, p: 'qasida', kind: 'qasida', ch: cur || 1, title: `${meta.shortTitle}${cur ? ` — الفصل ${ORD[cur - 1]}` : ''}`, bookTitle: meta.shortTitle });
   }, 400); };
   store.setLastRead({ b: meta.id, p: 'qasida', kind: 'qasida', ch: 1, title: meta.shortTitle, bookTitle: meta.shortTitle });
-  attachToc(view, 'فصول القصيدة', () => {
+  if (meta.chapters.length) attachToc(view, 'فصول القصيدة', () => {
     let cur = -1; meta.chapters.forEach((c, i) => { const el = document.getElementById(`ch-${i + 1}`); if (el && el.getBoundingClientRect().top < innerHeight * 0.4) cur = i; });
     return meta.chapters.map((c, i) => ({ title: c.title, sub: `الفصل ${ORD[i] || arNum(i + 1)}`, target: `ch-${i + 1}`, current: i === cur }));
   });
