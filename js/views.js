@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=5c87c3d7bd';
-import * as data from './data.js?v=5c87c3d7bd';
-import * as store from './store.js?v=5c87c3d7bd';
-import { search, queryWords } from './search.js?v=5c87c3d7bd';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=427d3dca7c';
+import * as data from './data.js?v=427d3dca7c';
+import * as store from './store.js?v=427d3dca7c';
+import { search, queryWords } from './search.js?v=427d3dca7c';
 
 const href = {
   library: () => '/',
