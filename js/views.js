@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=59bcc2f5b1';
-import * as data from './data.js?v=59bcc2f5b1';
-import * as store from './store.js?v=59bcc2f5b1';
-import { search, queryWords } from './search.js?v=59bcc2f5b1';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=a88ab617ca';
+import * as data from './data.js?v=a88ab617ca';
+import * as store from './store.js?v=a88ab617ca';
+import { search, queryWords } from './search.js?v=a88ab617ca';
 
 const href = {
   library: () => '/',
@@ -108,7 +108,7 @@ export async function libraryView() {
   const last = store.lastRead();
   const V = window.__V ? `?v=${window.__V}` : '';
   const metaLine = (b) => (b.type === 'pages' ? `${b.pages} صفحة`
-    : b.type === 'qasida' ? `${b.verses} بيتًا · ${b.chapters} فصلًا`
+    : b.type === 'qasida' ? (b.chapters ? `${b.verses} بيتًا · ${b.chapters} فصلًا` : `${b.verses} بيتًا`)
     : b.type === 'prose' ? `${b.parts} حرفًا`
     : `${pluralPoems(b.poems)} · ${b.sections} أقسام`);
   // بطاقة الكتاب: غلاف كالكتاب على الرف، وتحته العنوان
