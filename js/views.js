@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=e77186628d';
-import * as data from './data.js?v=e77186628d';
-import * as store from './store.js?v=e77186628d';
-import { search, queryWords } from './search.js?v=e77186628d';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=e9b5215337';
+import * as data from './data.js?v=e9b5215337';
+import * as store from './store.js?v=e9b5215337';
+import { search, queryWords } from './search.js?v=e9b5215337';
 
 const href = {
   library: () => '/',
@@ -173,7 +173,7 @@ function continueCard(last, lib) {
 }
 
 /** ورد اليوم: حزب دلائل الخيرات لكل يوم، ويوم الجمعة روضة المحبة وصلوات الدردير */
-const DALAIL_HIZB = { 1: [['الحزب الأول', 15], ['الحزب الثامن', 84]], 2: [['الحزب الثاني', 24]], 3: [['الحزب الثالث', 33]], 4: [['الحزب الرابع', 43]], 5: [['الحزب الخامس', 52]], 6: [['الحزب السادس', 64]], 0: [['الحزب السابع', 77]] };
+const DALAIL_HIZB = { 1: [['الحزب الثامن', 84], ['الحزب الأول', 15]], 2: [['الحزب الثاني', 24]], 3: [['الحزب الثالث', 33]], 4: [['الحزب الرابع', 43]], 5: [['الحزب الخامس', 52]], 6: [['الحزب السادس', 64]], 0: [['الحزب السابع', 77]] };
 function wirdCard(lib) {
   const d = new Date().getDay();
   const has = (id) => lib.books.some((b) => b.id === id);
