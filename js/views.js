@@ -1,8 +1,8 @@
 // الشاشات: المكتبة، الديوان والفهرس، المقدمة، القارئ، البحث، المفضلة
-import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=fb19c39f0e';
-import * as data from './data.js?v=fb19c39f0e';
-import * as store from './store.js?v=fb19c39f0e';
-import { search, queryWords } from './search.js?v=fb19c39f0e';
+import { h, svg, ICONS, ornament, display, highlight, toast, copyText, navigate, setUrlQuietly, goBack } from './util.js?v=e77186628d';
+import * as data from './data.js?v=e77186628d';
+import * as store from './store.js?v=e77186628d';
+import { search, queryWords } from './search.js?v=e77186628d';
 
 const href = {
   library: () => '/',
@@ -144,7 +144,7 @@ export async function libraryView() {
             h('span', { class: 'lc-ico' }, svg(LINK_ICONS[l.icon] || ICONS.external)), h('small', null, l.short || l.title)))))))
       : h('div', { class: 'link-cards' }, sh.links.map(linkCard))) : null));
   const view = h('div', { class: 'home' }, hero,
-    page('wide home-page', last ? continueCard(last, lib) : null, ...blocks,
+    page('wide home-page', last ? continueCard(last, lib) : null, wirdCard(lib), ...blocks,
       h('footer', { class: 'home-foot' }, ornament(), h('p', null, 'مكتبة الزاوية التمسّكية'))));
   return view;
 }
@@ -157,12 +157,37 @@ function lastHref(l) {
 function continueCard(last, lib) {
   const b = lib.books.find((x) => x.id === last.b);
   if (!b) return null;
+  const V = window.__V ? `?v=${window.__V}` : '';
+  const label = (b.type || 'diwan') === 'diwan' ? 'آخر قصيدة قُرئت' : 'آخر قراءة';
+  const sub = last.kind === 'page' ? `${b.shortTitle} · صفحة ${last.n || 1}`
+    : last.kind === 'qasida' ? (last.ch && b.type === 'qasida' && b.chapters ? `${b.shortTitle} · الفصل ${ORD[last.ch - 1] || last.ch}` : b.shortTitle)
+    : b.shortTitle;
+  const main = last.kind === 'page' || last.kind === 'qasida' ? b.title : `«${last.title}»`;
   const card = h('section', { class: 'continue-card', 'aria-label': 'متابعة القراءة' },
     h('button', { class: 'dismiss', type: 'button', 'aria-label': 'إخفاء آخر قراءة', title: 'إخفاء', onclick: () => { store.clearLastRead(); card.remove(); } }, '×'),
-    h('div', { class: 'ico' }, svg(ICONS.book)),
-    h('div', null, h('small', null, 'آخر قصيدة قرأتها'), h('div', { class: 't' }, `«${last.title}»`), h('small', null, b.shortTitle)),
-    h('a', { class: 'btn', href: lastHref(last) }, 'متابعة القراءة'));
+    h('a', { class: 'cc-link', href: lastHref(last) },
+      h('div', { class: 'cc-cover' }, b.coverThumb ? h('img', { src: b.coverThumb + (b.coverThumb.includes('?') ? '' : V), alt: '' }) : svg(ICONS.book)),
+      h('div', { class: 'cc-txt' }, h('small', null, label), h('div', { class: 't' }, main), h('small', null, sub)),
+      h('span', { class: 'btn' }, 'متابعة القراءة', h('span', { 'aria-hidden': 'true' }, ' ←'))));
   return card;
+}
+
+/** ورد اليوم: حزب دلائل الخيرات لكل يوم، ويوم الجمعة روضة المحبة وصلوات الدردير */
+const DALAIL_HIZB = { 1: [['الحزب الأول', 15], ['الحزب الثامن', 84]], 2: [['الحزب الثاني', 24]], 3: [['الحزب الثالث', 33]], 4: [['الحزب الرابع', 43]], 5: [['الحزب الخامس', 52]], 6: [['الحزب السادس', 64]], 0: [['الحزب السابع', 77]] };
+function wirdCard(lib) {
+  const d = new Date().getDay();
+  const has = (id) => lib.books.some((b) => b.id === id);
+  const items = [];
+  if (has('dalail-khayrat')) for (const [t, pg] of DALAIL_HIZB[d] || []) items.push({ t: `دلائل الخيرات — ${t}`, sub: `من صفحة ${pg}`, href: href.page('dalail-khayrat', pg) });
+  if (d === 5) {
+    if (has('rawdat-al-mahabba')) items.push({ t: 'روضة المحبة', sub: 'ورد يوم الجمعة', href: href.page('rawdat-al-mahabba', 1) });
+    if (has('salawat-dardir')) items.push({ t: 'الصلوات الدرديرية', sub: 'ورد يوم الجمعة', href: href.book('salawat-dardir') });
+  }
+  if (!items.length) return null;
+  return h('section', { class: 'wird-card', 'aria-label': 'ورد اليوم' },
+    h('header', null, h('b', null, 'ورد اليوم'), h('span', null, `يوم ${DAYS[d]}`)),
+    h('div', { class: 'wird-list' }, items.map((it) => h('a', { class: 'wird-item', href: it.href },
+      h('span', { class: 'wi-t' }, it.t), h('small', null, it.sub), h('span', { class: 'wi-go', 'aria-hidden': 'true' }, '←')))));
 }
 
 // ═══════════ الديوان والفهرس ═══════════
@@ -839,7 +864,10 @@ export async function poemView(bookId, poemId, params) {
     h('h1', null, loc.entry.n ? h('span', { class: 'num' }, `(${loc.entry.n})`) : null, title),
     h('div', { class: 'by' }, display(poem.author)));
 
-  let listen = recordingsPanel(poem.recordings || [], title, display(poem.author), meta.shortTitle);
+  const entries = Object.fromEntries(meta.sections.flatMap((s) => s.poems.map((p) => [p.id, p])));
+  const nextAud = meta.order.slice(loc.index + 1).find((id) => entries[id] && entries[id].a);
+  const recOpts = { next: nextAud ? `${href.poem(bookId, nextAud)}?play=1` : null, autoplay: params.get('play') === '1' };
+  let listen = recordingsPanel(poem.recordings || [], title, display(poem.author), meta.shortTitle, recOpts);
   // التسجيلات مدمجة في بيانات القصيدة عند البناء فتظهر فورًا؛ وفي الخلفية يُقرأ links.txt لالتقاط رابط أُضيف بعد البناء
   {
     const num = loc.entry.n ?? (sec.poems.findIndex((x) => x.id === poemId) + 1);
@@ -848,7 +876,7 @@ export async function poemView(bookId, poemId, params) {
       const extra = (links[`${sec.id}-${num}`] || []).filter((r) => !have.has(r.src));
       if (!extra.length || !listen.isConnected) return;
       const recs = [...(poem.recordings || []), ...extra].map((r, k) => ({ ...r, i: k + 1 }));
-      const panel = recordingsPanel(recs, title, display(poem.author), meta.shortTitle);
+      const panel = recordingsPanel(recs, title, display(poem.author), meta.shortTitle, recOpts);
       listen.replaceWith(panel); listen = panel;
     });
   }
@@ -1143,7 +1171,32 @@ function audioLinks(bookId) {
   }
   return linksCache.get(bookId);
 }
-function recordingsPanel(recs, title, author, bookTitle) {
+// ——— حفظ التسجيل على الجهاز للاستماع بلا إنترنت ———
+const AUDIO_CACHE = 'audio-v1';
+async function savedAudio(url) { try { const c = await caches.open(AUDIO_CACHE); return await c.match(url); } catch { return null; } }
+function audioSaveRow(r, audio) {
+  if (!('caches' in window)) return null;
+  const btn = h('button', { class: 'sp-save', type: 'button' }, svg(ICONS.download), h('span', null, 'حفظ للاستماع بلا إنترنت'));
+  const setSaved = (yes) => { btn.classList.toggle('on', yes); btn.lastChild.textContent = yes ? 'محفوظ على الجهاز · حذف' : 'حفظ للاستماع بلا إنترنت'; };
+  savedAudio(r.src).then(async (res) => {
+    if (!res) return; setSaved(true);
+    try { const blob = await res.clone().blob(); if (audio.paused && !audio.currentTime) { audio.src = URL.createObjectURL(blob); } } catch {}
+  });
+  btn.onclick = async () => {
+    const c = await caches.open(AUDIO_CACHE);
+    if (btn.classList.contains('on')) { await c.delete(r.src); setSaved(false); toast('حُذف التسجيل من الجهاز.'); return; }
+    btn.disabled = true; btn.lastChild.textContent = 'جارٍ الحفظ…';
+    try {
+      const res = await fetch(r.src, { mode: 'cors' });
+      if (!res.ok) throw new Error(res.status);
+      await c.put(r.src, res);
+      setSaved(true); toast('حُفظ التسجيل، ويمكن سماعه الآن بلا إنترنت.');
+    } catch { setSaved(false); toast('تعذّر حفظ التسجيل، يُرجى التأكد من الاتصال وإعادة المحاولة.'); }
+    btn.disabled = false;
+  };
+  return btn;
+}
+function recordingsPanel(recs, title, author, bookTitle, opts = {}) {
   if (!recs.length) {
     return h('div', { class: 'listen none' }, svg(ICONS.noAudio), h('span', null, 'لا يوجد تسجيل لهذه القصيدة'));
   }
@@ -1170,7 +1223,14 @@ function recordingsPanel(recs, title, author, bookTitle) {
           navigator.mediaSession.metadata = new MediaMetadata({ title, artist: r.reciter || author, album: bookTitle });
         }
       });
-      box.append(h('div', { class: 'rec' }, (label || r.note) ? h('div', { class: 'lbl' }, label ? h('span', null, label) : null, r.note ? h('small', null, r.note) : null) : null, slimPlayer(audio)));
+      // التشغيل المتتابع: عند انتهاء التسجيل تُفتح القصيدة التالية التي لها تسجيل وتبدأ تلقائيًا
+      audio.addEventListener('ended', () => { if (opts.next && store.settings().autoNext && audio.isConnected) navigate(opts.next); });
+      if (opts.autoplay && r.i === 1) setTimeout(() => { if (audio.isConnected) audio.play().catch(() => {}); }, 400);
+      const extras = h('div', { class: 'rec-extras' },
+        opts.next ? (() => { const b = h('button', { class: 'sp-chip', type: 'button', 'aria-pressed': String(store.settings().autoNext) }, 'تشغيل التالية تلقائيًا');
+          b.onclick = () => { const v = !store.settings().autoNext; store.setSetting('autoNext', v); b.setAttribute('aria-pressed', String(v)); toast(v ? 'ستُشغَّل القصيدة التالية تلقائيًا.' : 'أُوقف التشغيل المتتابع.'); }; return b; })() : null,
+        audioSaveRow(r, audio));
+      box.append(h('div', { class: 'rec' }, (label || r.note) ? h('div', { class: 'lbl' }, label ? h('span', null, label) : null, r.note ? h('small', null, r.note) : null) : null, slimPlayer(audio), extras));
     } else {
       box.append(h('div', { class: 'rec' }, h('div', { class: 'lbl' }, svg(ICONS.headphones), h('span', null, label), r.note ? h('small', null, r.note) : null),
         h('a', { class: 'btn ghost', href: r.src, target: '_blank', rel: 'noopener' }, svg(ICONS.external), 'الاستماع إلى التسجيل')));
@@ -1288,4 +1348,94 @@ export function continueTarget() {
 export function noReadingView() {
   document.title = 'متابعة القراءة';
   return page('', h('div', { class: 'empty' }, h('div', { class: 'big' }, 'لم تبدأ القراءة بعد'), h('div', null, 'عندما تفتح قصيدة، ستجدها هنا لتكمل من حيث توقفت.'), h('a', { class: 'btn', href: '/' }, 'اختر ديوانًا')));
+}
+
+// ═══════════ مشاركة بيت أو صلاة: نسخ، أو صورة مزخرفة مع رابط الموقع ═══════════
+const SITE_URL = 'zawiya-library.pages.dev';
+function textOfPara(p) {
+  let t = '';
+  p.childNodes.forEach(function walk(n) {
+    if (n.nodeType === 3) t += n.textContent;
+    else if (n.classList?.contains('pr-orn')) t += ' ';
+    else if (n.dataset?.t != null) t += n.dataset.t;
+    else n.childNodes.forEach(walk);
+  });
+  return t.replace(/ـ+/g, (m, i, s) => m).replace(/\s+/g, ' ').trim();
+}
+function shareSource(el) {
+  const title = document.title;
+  if (el.classList.contains('row')) {
+    const parts = [...el.querySelectorAll('.part .tx')].map((x) => (x.dataset.o || x.dataset.t || x.textContent).trim());
+    return { kind: 'بيت', lines: parts, text: parts.join(' ... '), title, font: getComputedStyle(el.querySelector('.tx') || el).fontFamily };
+  }
+  const t = textOfPara(el);
+  return { kind: 'صلاة', lines: null, text: t, title, font: getComputedStyle(el).fontFamily };
+}
+function wrapLines(ctx, text, maxW) {
+  const words = text.split(' '); const out = []; let cur = '';
+  for (const w of words) { const test = cur ? `${cur} ${w}` : w; if (ctx.measureText(test).width > maxW && cur) { out.push(cur); cur = w; } else cur = test; }
+  if (cur) out.push(cur); return out;
+}
+async function shareImage(src) {
+  const W = 1080, pad = 90, inner = W - pad * 2;
+  const c = document.createElement('canvas'); const ctx = c.getContext('2d');
+  const fam = src.font || '"Amiri", serif';
+  try { await document.fonts.load(`48px ${fam}`, src.text); await document.fonts.load('700 40px "Aref Ruqaa"'); } catch {}
+  let size = src.lines ? 56 : 48;
+  ctx.font = `${size}px ${fam}`;
+  let lines = src.lines ? src.lines.flatMap((l) => wrapLines(ctx, l, inner)) : wrapLines(ctx, src.text, inner);
+  while (!src.lines && lines.length > 14 && size > 32) { size -= 4; ctx.font = `${size}px ${fam}`; lines = wrapLines(ctx, src.text, inner); }
+  const lh = size * 1.9;
+  const H = Math.max(1080, Math.round(pad * 2 + 150 + lines.length * lh + 190));
+  c.width = W; c.height = H;
+  // الخلفية والإطار
+  ctx.fillStyle = '#f8f2e4'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#a9822f'; ctx.lineWidth = 6; ctx.strokeRect(34, 34, W - 68, H - 68);
+  ctx.lineWidth = 2; ctx.strokeRect(50, 50, W - 100, H - 100);
+  const diamond = (x, y, r) => { ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill(); };
+  ctx.fillStyle = '#a9822f'; [[50, 50], [W - 50, 50], [50, H - 50], [W - 50, H - 50]].forEach(([x, y]) => diamond(x, y, 14));
+  ctx.direction = 'rtl'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  // العنوان
+  ctx.fillStyle = '#1f5b45'; ctx.font = '700 44px "Aref Ruqaa", "Amiri", serif';
+  ctx.fillText(src.title.length > 40 ? src.title.split(' — ')[0].slice(0, 40) : src.title, W / 2, pad + 50);
+  ctx.fillStyle = '#a9822f'; diamond(W / 2, pad + 110, 9); ctx.fillRect(W / 2 - 160, pad + 109, 130, 2); ctx.fillRect(W / 2 + 30, pad + 109, 130, 2);
+  // النص
+  ctx.fillStyle = '#2b2118'; ctx.font = `${size}px ${fam}`;
+  let y = pad + 150 + lh / 2;
+  const top = y; const blockH = lines.length * lh; const avail = H - pad - 190 - (pad + 150);
+  y = top + Math.max(0, (avail - blockH) / 2);
+  for (const l of lines) { ctx.fillText(l, W / 2, y); y += lh; }
+  // التذييل
+  ctx.fillStyle = '#a9822f'; diamond(W / 2, H - pad - 110, 9);
+  ctx.fillStyle = '#1f5b45'; ctx.font = '700 38px "Aref Ruqaa", "Amiri", serif'; ctx.fillText('مكتبة الزاوية التمسّكية', W / 2, H - pad - 60);
+  ctx.fillStyle = '#7a6a55'; ctx.font = '30px "Amiri", serif'; ctx.direction = 'ltr'; ctx.fillText(SITE_URL, W / 2, H - pad - 12);
+  const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
+  const file = new File([blob], 'zawiya.png', { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], text: `${src.text}\n\nhttps://${SITE_URL}${location.pathname}` }); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = h('a', { href: URL.createObjectURL(blob), download: 'zawiya.png' }); document.body.append(a); a.click(); a.remove();
+  toast('حُفظت الصورة على الجهاز، ويمكن إرسالها الآن.');
+}
+let sharePop = null;
+function closeSharePop() { sharePop?.remove(); sharePop = null; document.querySelector('.share-sel')?.classList.remove('share-sel'); }
+export function installShareTap() {
+  document.addEventListener('click', (e) => {
+    if (sharePop && sharePop.contains(e.target)) return;
+    const el = e.target.closest?.('.poem .row, .pr-p');
+    const had = !!sharePop; closeSharePop();
+    if (!el || had || e.target.closest('a, button, sup') || String(getSelection()).trim()) return;
+    const src = shareSource(el); if (!src.text) return;
+    el.classList.add('share-sel');
+    const link = `https://${SITE_URL}${location.pathname}${el.id ? `#${el.id}` : ''}`;
+    sharePop = h('div', { class: 'share-pop', role: 'menu' },
+      h('button', { type: 'button', onclick: async () => { closeSharePop(); toast((await copyText(`${src.text}\n— ${src.title}\n${link}`)) ? `نُسخ ال${src.kind}.` : 'تعذّر النسخ.'); } }, svg(ICONS.copy), 'نسخ'),
+      h('button', { type: 'button', onclick: async () => { closeSharePop(); try { await shareImage(src); } catch { toast('تعذّر إنشاء الصورة.'); } } }, svg(ICONS.share || ICONS.copy), 'مشاركة صورة'));
+    document.body.append(sharePop);
+    const r = el.getBoundingClientRect();
+    const top = r.bottom + 8 + 50 < innerHeight ? r.bottom + scrollY + 8 : r.top + scrollY - 56;
+    sharePop.style.top = `${Math.max(scrollY + 8, top)}px`;
+  });
+  addEventListener('popstate', closeSharePop);
 }

@@ -178,14 +178,27 @@ h1, h2, h3 { text-wrap: balance; }
 /* ——— المكتبة ——— */
 .lib-head { display: grid; gap: 4px; text-align: center; padding-top: 8px; }
 .lib-head h1 { font-family: var(--kufi); font-weight: 700; font-size: clamp(1.7rem, 6.5vw, 2.3rem); letter-spacing: .01em; }
-.continue-card { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; background: var(--emerald); color: var(--on-emerald); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.continue-card { position: relative; background: linear-gradient(135deg, var(--emerald), color-mix(in srgb, var(--emerald) 78%, #000)); color: var(--on-emerald); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.continue-card .cc-link { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; padding: 16px; color: inherit; text-decoration: none; }
+.continue-card .cc-cover { width: 64px; aspect-ratio: 3 / 4; border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: rgb(255 255 255 / 12%); box-shadow: 0 4px 12px rgb(0 0 0 / 25%); }
+.continue-card .cc-cover img { width: 100%; height: 100%; object-fit: cover; }
+.continue-card .cc-txt { min-width: 0; padding-inline-end: 26px; }
 .continue-card .dismiss { position: absolute; z-index: 1; top: 6px; inset-inline-end: 8px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgb(255 255 255 / 12%); color: inherit; font-size: 1.3rem; line-height: 1; cursor: pointer; }
 .continue-card .dismiss:hover { background: rgb(255 255 255 / 22%); }
-.continue-card .ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: rgb(255 255 255 / 12%); }
 .continue-card .t { font-family: var(--title); font-size: 1.28rem; line-height: 1.5; }
-.continue-card small { opacity: .8; display: block; }
-.continue-card .btn { grid-column: 1 / -1; background: var(--on-emerald); color: var(--emerald); }
+.continue-card small { opacity: .85; display: block; }
+.continue-card .btn { grid-column: 1 / -1; background: var(--on-emerald); color: var(--emerald); font-weight: 700; }
 :root[data-mode="night"] .continue-card .btn { color: #0f1714; }
+.wird-card { background: var(--paper); border: 1px solid color-mix(in srgb, var(--gold, #b08d3c) 45%, var(--line)); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; }
+.wird-card header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.wird-card header b { font-family: var(--title); font-size: 1.2rem; color: var(--emerald); }
+.wird-card header span { color: var(--muted); font-size: .9rem; }
+.wird-list { display: grid; gap: 6px; }
+.wird-item { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--emerald-soft); color: var(--ink); text-decoration: none; }
+.wird-item .wi-t { font-weight: 700; }
+.wird-item small { color: var(--muted); grid-row: 2; }
+.wird-item .wi-go { grid-row: 1 / 3; grid-column: 2; align-self: center; color: var(--emerald); font-size: 1.2rem; }
+.home-page > .wird-card { margin-top: 14px; }
 .books { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 18px; }
 .book-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: grid; grid-template-columns: 112px 1fr; box-shadow: var(--shadow); }
 .book-card .cover { background: var(--emerald-soft); aspect-ratio: 905 / 1280; height: 100%; }
@@ -589,3 +602,18 @@ canvas.page-img { display: block; width: 100%; height: auto; background: #fff; m
 /* موضع نتيجة البحث */
 .flash { animation: flash 2.6s ease-out 1; border-radius: 8px; }
 @keyframes flash { 0%, 35% { background: color-mix(in srgb, var(--gold) 28%, transparent); } 100% { background: transparent; } }
+
+/* أدوات التسجيل: التشغيل المتتابع والحفظ */
+.rec-extras { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 2px; }
+.sp-chip, .sp-save { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: .82rem; cursor: pointer; }
+.sp-save svg { width: 15px; height: 15px; }
+.sp-chip[aria-pressed="true"], .sp-save.on { color: var(--emerald); border-color: color-mix(in srgb, var(--emerald) 45%, transparent); background: color-mix(in srgb, var(--emerald) 8%, var(--paper)); }
+.sp-save:disabled { opacity: .6; }
+/* مشاركة بيت أو صلاة */
+.share-pop { position: absolute; inset-inline: 0; margin-inline: auto; width: max-content; z-index: 40; display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: var(--ink); box-shadow: 0 6px 20px rgb(0 0 0 / 25%); animation: pop-in .15s ease-out; }
+.share-pop button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--paper); font: inherit; font-size: .92rem; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+.share-pop button:hover { background: rgb(255 255 255 / 12%); }
+.share-pop svg { width: 17px; height: 17px; }
+.share-sel { background: color-mix(in srgb, var(--gold) 14%, transparent); border-radius: 8px; }
+.poem .row, .pr-p { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(4px); } }

@@ -39,7 +39,7 @@ export function setLastScroll(book, poem, ratio) {
 
 // ——— الإعدادات ———
 const SIZES = [0.85, 0.92, 1, 1.1, 1.22, 1.36, 1.52, 1.7];
-export function settings() { return { size: 1, mode: 'auto', ...read(K.settings, {}) }; }
+export function settings() { return { size: 1, mode: 'auto', autoNext: true, ...read(K.settings, {}) }; }
 export function applySettings() {
   const s = settings();
   const root = document.documentElement;
@@ -56,6 +56,7 @@ export function stepSize(dir) {
   write(K.settings, { ...s, size: SIZES[i] }); applySettings();
   return SIZES[i];
 }
+export function setSetting(k, v) { write(K.settings, { ...settings(), [k]: v }); }
 export function setMode(mode) { write(K.settings, { ...settings(), mode }); applySettings(); }
 export function cycleMode() {
   const order = ['auto', 'ivory', 'light', 'night'];

@@ -1,8 +1,8 @@
 // نقطة البدء: التوجيه، القائمة، الإعدادات، عامل الخدمة
-import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=fb19c39f0e';
-import * as store from './store.js?v=fb19c39f0e';
-import * as data from './data.js?v=fb19c39f0e';
-import * as V from './views.js?v=fb19c39f0e';
+import { h, toast, HASH_MODE, currentPath, navigate } from './util.js?v=e77186628d';
+import * as store from './store.js?v=e77186628d';
+import * as data from './data.js?v=e77186628d';
+import * as V from './views.js?v=e77186628d';
 
 const main = document.getElementById('main');
 let current = null;
@@ -167,4 +167,5 @@ async function checkVersion() {
 addEventListener('app:navigate', checkVersion);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkVersion(); });
 setTimeout(checkVersion, 3000);
+V.installShareTap();
 route();
